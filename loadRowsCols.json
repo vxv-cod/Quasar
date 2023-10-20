@@ -1,73 +1,56 @@
 {
-  "loadColumns": [{
+  "loadColumns": [
+    {
+      "name": "idRows",
+      "align": "center",
+      "label": "ID"
+    },
+    {
       "name": "name",
       "required": true,
       "label": "Dessert (100g serving)",
-      "align": "left",
-      "sortable": true,
-      "fixed": false
+      "align": "left"
     },
     {
       "name": "calories",
       "align": "center",
-      "label": "Calories",
-      "field": "calories",
-      "sortable": true,
-      "fixed": false
+      "label": "Calories"
     },
     {
       "name": "fat",
       "align": "center",
-      "label": "Fat (g)",
-      "field": "fat",
-      "sortable": true,
-      "fixed": false
+      "label": "Fat (g)"
     },
     {
       "name": "carbs",
       "align": "center",
-      "label": "Carbs (g)",
-      "field": "carbs",
-      "sortable": true,
-      "fixed": false
+      "label": "Carbs (g)"
     },
     {
       "name": "protein",
       "align": "center",
-      "label": "Protein (g)",
-      "field": "protein",
-      "sortable": true,
-      "fixed": false
+      "label": "Protein (g)"
     },
     {
       "name": "sodium",
       "align": "center",
-      "label": "Sodium (mg)",
-      "field": "sodium",
-      "sortable": true,
-      "fixed": false
+      "label": "Sodium (mg)"
     },
     {
       "name": "calcium",
       "align": "center",
-      "label": "Calcium (%)",
-      "field": "calcium",
-      "sortable": true,
-      "fixed": false
+      "label": "Calcium (%)"
     },
     {
       "name": "iron",
       "align": "center",
-      "label": "Iron (%)",
-      "field": "iron",
-      "sortable": true,
-      "fixed": false
+      "label": "Iron (%)"
     }
   ],
 
   "loadRows": [
     {
-      "id": 1,
+
       "name": "Frozen Yogurt",
       "calories": 159,
       "fat": 6.0,
@@ -78,7 +61,7 @@
       "iron": "1%"
     },
     {
-      "id": 2,
+
       "name": "Frozen Yogurt",
       "calories": 159,
       "fat": 6.0,
@@ -89,7 +72,7 @@
       "iron": "1%"
     },
     {
-      "id": 3,
+
       "name": "Ice cream sandwich",
       "calories": 237,
       "fat": 9.0,
@@ -100,7 +83,7 @@
       "iron": "1%"
     },
     {
-      "id": 4,
+
       "name": "Eclair",
       "calories": 262,
       "fat": 16.0,
@@ -111,7 +94,7 @@
       "iron": "7%"
     },
     {
-      "id": 5,
+
       "name": "Cupcake",
       "calories": 305,
       "fat": 3.7,
@@ -122,7 +105,7 @@
       "iron": "8%"
     },
     {
-      "id": 6,
+
       "name": "Gingerbread",
       "calories": 356,
       "fat": 16.0,
@@ -133,7 +116,7 @@
       "iron": "16%"
     },
     {
-      "id": 7,
+
       "name": "Jelly bean",
       "calories": 375,
       "fat": 0.0,
@@ -144,7 +127,7 @@
       "iron": "0%"
     },
     {
-      "id": 8,
+
       "name": "Lollipop",
       "calories": 392,
       "fat": 0.2,
@@ -155,7 +138,7 @@
       "iron": "2%"
     },
     {
-      "id": 9,
+
       "name": "Honeycomb",
       "calories": 408,
       "fat": 3.2,
@@ -166,7 +149,7 @@
       "iron": "45%"
     },
     {
-      "id": 10,
+
       "name": "Donut",
       "calories": 452,
       "fat": 25.0,
@@ -177,7 +160,7 @@
       "iron": "22%"
     },
     {
-      "id": 11,
+
       "name": "KitKat",
       "calories": 518,
       "fat": 26.0,

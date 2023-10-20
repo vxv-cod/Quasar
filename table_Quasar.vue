@@ -3,17 +3,19 @@
   <!-- <div class="blackout"></div> -->
 
 
-  <p><h6>menuShow: {{ menuShow }}</h6></p>
+  <p><h6>visibleColumns: {{ visibleColumns }}</h6></p>
+  <!-- <pre>columns: {{ columns }}</pre> -->
+  <!-- <p><h6>menuShow: {{ menuShow }}</h6></p> -->
   <p><h6>filterColumns: {{ filterColumns }}</h6></p>
-  <p><h6>showEditIcon: {{ showEditIcon }}</h6></p>
+  <!-- <p><h6>showEditIcon: {{ showEditIcon }}</h6></p> -->
   <p><h6>colorEditCells: {{ colorEditCells }}</h6></p>
   <p><h6> RowsInCols: {{ RowsInCols }}</h6></p>
   <!-- <p><h6>rows: {{ rows }}</h6></p> -->
   <!-- <p><h6>blackout: {{ blackout }}</h6></p> -->
   <!-- <p><h6> selectAllFil: {{ selectAllFil }}</h6></p> -->
   <!-- <p><h6> createRowsInCols: {{ createRowsInCols }}</h6></p> -->
-  <p><h6> columnItem: {{ columnItem }}</h6></p>
-  <p><h6> rows: {{ rows }}</h6></p>
+  <!-- <p><h6> columnItem: {{ columnItem }}</h6></p> -->
+  <!-- <p><h6> rows: {{ rows }}</h6></p> -->
 
   <div class="q-pa-md">
     <q-table
@@ -26,14 +28,17 @@
       class="my-sticky"
       :loading="loading"
       v-model:pagination="pagination"
-      :rows-per-page-options="[10]"
-      :sort-method="customSort"
+      :rows-per-page-options="[15]"
+      :visible-columns="visibleColumns"
+      :sort-method.="customSort"
+
 
     >
 
     <!--
       :sort-method="customSort"
-
+      v-model:pagination="pagination"
+      :rows-per-page-options="[15]"
       virtual-scroll
       :rows-per-page-options="[0]"
       :virtual-scroll-sticky-size-start="48"
@@ -75,11 +80,82 @@
         <q-btn flat round color="white" size="sm" icon="mdi-lock-outline"/>
         <q-btn flat round color="white" size="sm" icon="mdi-lock-open-variant-outline"/>
         <q-btn flat round color="white" size="sm" icon="mdi-arrow-u-right-top"/>
-        <q-btn flat round color="white" size="sm" icon="undo"/>
-        <q-btn flat round color="white" size="sm" icon="redo"/>
+        <q-btn flat round color="white" size="sm" icon="undo" class="tryaska"/>
+        <q-btn flat round color="white" size="sm" icon="redo" class="tryaska" />
       </div>
 
+
+
+
+
+
+      <!-- <q-fab color="purple" direction="up">
+        <template v-slot:icon="{ opened }">
+          <q-icon :class="{ 'example-fab-animate--hover': opened !== true }" name="keyboard_arrow_up" />
+        </template>
+
+        <template v-slot:active-icon="{ opened }">
+          <q-icon :class="{ 'example-fab-animate': opened === true }" name="undo" />
+        </template>
+
+        <q-fab-action color="secondary" external-label @click="onClick" icon="alarm" label="Alarm" />
+        <q-fab-action color="primary" external-label @click="onClick" icon="mail" label="Mail" />
+      </q-fab>
+
+
+      <q-fab color="secondary" push direction="right" icon="keyboard_arrow_right">
+        <q-fab-action color="primary" @click="onClick" icon="mail" />
+        <q-fab-action color="accent" @click="onClick" icon="alarm" />
+      </q-fab> -->
+
+
+
+
+
+
+
+
+
+
+
+
       <q-space />
+      <div class="q-mr-md">
+
+      <!-- <q-select
+        v-model:menuShow="menuShow"
+        v-model="visibleColumns"
+        multiple
+        outlined
+        dense
+        options-dense
+        :display-value="$q.lang.table.columns"
+        emit-value
+        map-options
+        :options="columns"
+        option-value="name"
+        options-cover
+        style="min-width: 150px"
+      /> -->
+
+      <q-space />
+
+      <div class="">
+
+      <vxvMenu
+        :iconBtn="`mdi-view-column`"
+        :menuTitle="`Колонки`"
+        :columnNames="columnNames"
+        :columnLabels="columnLabels"
+
+        v-model:menuShow="menuShow"
+        v-model:visibleColumns="visibleColumns"
+        />
+      </div>
+
+    </div>
+
+      <!-- <q-space /> -->
 
       <q-pagination
         v-model="pagination.page"
@@ -103,13 +179,30 @@
 
      <!-- todo Заполняем заголовки колонок таблицы -->
     <template v-slot:header="props">
-      <q-tr class="text-white">
+      <q-tr class="text-white" >
         <q-th ref="fistTd"
           style="
             `position: sticky; left: 0; z-index: 5;`
           "
           >
-          <q-checkbox class="text-white" v-model="props.selected" size="xs" dense style=""/>
+          <q-checkbox class="text-white" size="xs" dense style="" color="black"
+            v-model="props.selected"
+            :checked-icon="selected.length > 0 && selected.length !== rows.length? `mdi-checkbox-intermediate` : null"
+
+          />
+          <!--
+            :checked-icon="selected.length > 0 && selected.length !== rows.length? `mdi-checkbox-intermediate` : null"
+            :val="props.selected && selected != [] ? null : props.selected"
+            @click="toggleAll"
+            v-model="props.selected"
+           -->
+          <!-- <q-checkbox class="text-white"  size="xs" dense style=""/> -->
+          <!-- v-model="props.selected" -->
+          <!-- {{ props }} -->
+          <!-- <pre>{{ props }}</pre> -->
+          <!-- :val="props"  -->
+          <!-- :val="null"  -->
+
         </q-th>
 
         <q-th
@@ -126,35 +219,21 @@
               <span >{{ column.label }}</span>
             </div>
 
-            <!-- <pre>{{ column }}</pre> -->
+            <!-- <pre>{{ props.selected }}</pre> -->
 
-            <div class="my-flex-inner-right" @click.stop="customSort">
-              <div class="my-flex-inner-right">
+            <div class="my-flex-inner-right" @click.stop.self="customSort" >
+              <div class="my-flex-inner-right" >
                 <menuFilter
                     v-model:menuShow="menuShow"
                     v-model:columnItem="columnItem"
                     :columnTitle="column.label"
                     :columnKey="column.name"
-                    :RowsInColsItem="RowsInCols[column.name]"
-                    :outsideSelect="selectAllFil[column.name]"
-                    :colorBtn="Object.keys(filterColumns).includes(column.name) && column.name !=[] ? `text-amber` : null"
+                    :RowsInColsItem="[... new Set(RowsInCols[column.name])]"
+                    :outsideSelect="[... new Set(selectAllFil[column.name])]"
+                    :colorBtn="Object.keys(filterColumns).includes(column.name) && column.name != [] ? `text-amber` : null"
                     :showEditIcon="showEditIcon"
                     />
               </div>
-
-              <!--
-                v-model:columnItem="columnItem"
-                    :outSelectedFilter="(value) => columnItem = value"
-                    :showEditIcon="showEditIcon"
-
-
-                :outsideSelect="[... new Set(selectAllFil.value[column.name])]"
-                    v-model:outsideSelect="selectAllFil.value[column.name]"
-                    :colorBtn="Object.keys(filterColumns).includes(column.name) && column.name !=[] ? `text-amber` : null"
-
-                @outSelectedFilterfff="(value) => columnItem = value"
-               -->
-
               <q-btn flat round dense color="white" size="sm"
                 :class="column.fixed ? `text-amber` : null"
                 :icon="columns[idx].fixed ? 'mdi-lock-outline' : 'mdi-lock-open-variant-outline'"
@@ -162,14 +241,7 @@
                 />
             </div>
 
-            <!--
-               :outMenuShow="(value) => menuShow = value"
-               v-model="menuShow"
-               :mymenuShow="menuShow"
-              -->
-            <!-- </div> -->
-          <!-- </div> -->
-        </q-th>
+          </q-th>
       </q-tr>
   </template>
 
@@ -180,7 +252,7 @@
       <q-td :class="selected.includes(props.row) ? `bg-${colorTabSelectRow}` : null"
         :style="`position: sticky; left: 0; z-index: 4; background-color: white`"
         >
-        <q-checkbox v-model="props.selected" size="xs" dense />
+        <q-checkbox v-model="selected" :val="props.row" size="xs" dense color="black" />
       </q-td>
 
       <q-td v-for="(column, index) in props.cols" :key="column.name" valign="middle"
@@ -190,19 +262,51 @@
         style=""
         :style="[
             collFix(column),
-            colorEditCells[column.name][props.rowIndex] !== rows[props.rowIndex][column.name] ? 'color: #0091EA;' : null,
-            colorEditCells[column.name][props.rowIndex] !== rows[props.rowIndex][column.name] && column.fixed === true ?
+            // collFixRows(column, props),
+            // colorEditCells[column.name][props.rowIndex] !== rows[props.rowIndex][column.name] ? 'color: #0091EA;' : null,
+            // colorEditCells[column.name][props.rowIndex] !== rows[props.rowIndex][column.name] && column.fixed === true ?
+            //   'background-color: white; box-shadow: none' : null,
+
+
+
+            colorEditCells[column.name][props.row.idRows] !== rows[props.row.idRows][column.name] ? 'color: #0091EA;' : null,
+            colorEditCells[column.name][props.row.idRows] !== rows[props.row.idRows][column.name] && column.fixed === true ?
               'background-color: white; box-shadow: none' : null,
+            // funColorEdit(column, props.row)
         ]"
-        @input="(val) => [tdInput(val, column.name, props.rowIndex), ]"
+
+        @input="(val) => tdInput(val, column.name, props.row.idRows)"
+
         >
-        <div v-if="!loading">
-          <p v-if="showEditIcon" style="" v-text="column.value"></p>
-          <p v-if="!showEditIcon" style="user-select: none;" v-text="rows[props.rowIndex][column.name]"></p>
-        </div>
-        <div v-if="loading">
+        <!-- <div v-if="!loading"> -->
+          <!-- <p v-if="showEditIcon" v-text="props.row[column.name]"></p>
+          <p v-else v-text="props.row[column.name]"></p> -->
+
+          <p v-if="showEditIcon" v-text="column.value"></p>
+          <p v-else v-text="column.value"></p>
+
+          <!-- <pre>{{ colorEditCells[column.name][props.row.idRows] }}</pre> -->
+          <!-- <pre>{{ rows[props.row.idRows][column.name] }}</pre> -->
+          <!--
+            <p v-if="showEditIcon" v-text="props.row[column.name]"></p>
+            <p v-else v-text="props.row[column.name]"></p>
+         -->
+
+
+          <!-- {{ props.row.idRows }} -->
+          <!-- <pre>{{ column.value }}</pre> -->
+          <!-- <pre>{{ props.row.id }}</pre> -->
+          <!-- <pre>{{ / }}</pre> -->
+
+
+          <!-- <p v-if="showEditIcon" v-text="column.value"></p> -->
+          <!-- <p v-if="!showEditIcon" style="user-select: none;" v-text="rows[props.rowIndex][column.name]"></p> -->
+          <!-- <p v-if="!showEditIcon" style="user-select: none;" v-text="column.value"></p> -->
+          <!-- <p v-else style="user-select: none;" v-text="rows[props.rowIndex][column.name]"></p> -->
+        <!-- </div> -->
+        <!-- <div v-if="loading">
           <q-skeleton animation="wave"  type="text" width="100%" />
-        </div>
+        </div> -->
       </q-td>
     </q-tr>
 
@@ -302,6 +406,7 @@
 import loadRowsCols from "../store/loadRowsCols.json"
 import menuFilter from "./vxv_menu_filter.vue"
 import blackout from "./blackout.vue"
+import vxvMenu from "./vxv_menu.vue"
 
 // import { useMousePosition } from "./useMousePosition.js"
 import { ref, reactive, computed, toRefs, watch, onMounted, watchEffect, isRef,
@@ -311,6 +416,7 @@ import { ref, reactive, computed, toRefs, watch, onMounted, watchEffect, isRef,
   readonly,
   toRaw,
   markRaw,
+  onUpdated,
 } from 'vue'
 console.log("---------------------------------------------------------")
 const fixRef = ref([])
@@ -325,21 +431,39 @@ const fistTdWidth = ref(1)
 // console.log("blackout.value.style = ", blackout.value);
 // blackout.value.style = "display: block"
 
+onUpdated(() => {console.log('onUpdated_000')})
 
 const {loadRows, loadColumns} = loadRowsCols
 
-loadColumns[0]["field"] = row => row.name
-loadColumns[0]["format"] = val => `${val}`
-loadColumns[6]["sort"] = (a, b) => parseInt(a, 10) - parseInt(b, 10)
-loadColumns[7]["sort"] = (a, b) => parseInt(a, 10) - parseInt(b, 10)
+loadColumns.forEach((e, i) => {
+  e["field"] = e.name
+  e['visibleCol'] = e.name
+  // e['sortable'] = true
+  // e['label'].includes('%') ? e['sort'] = (a, b) => parseInt(a, 10) - parseInt(b, 10) : null
+})
+
+// const visibleColumns = computed(() => loadColumns.map(e => e['visibleCol']))
+const visibleColumns = ref(loadColumns.map(e => e['visibleCol']))
+
+// visibleColumns.value.splice(2, 5)
+
+loadRows.forEach((e, i) => e['idRows'] = i)
 
 const rows = ref(loadRows)
 const columns = reactive(loadColumns)
+
+// rows.value.forEach((e, i) => e['idRows'] = i)
+
+
+console.log("rows_ = ", rows.value)
+console.log("columns_ = ", columns)
+
 
 export default {
   components: {
     menuFilter,
     blackout,
+    vxvMenu,
   },
 
   setup (props, context) {
@@ -358,17 +482,21 @@ export default {
       else {selected.value.splice(selected.value.indexOf(item), 1)}
     }
 
-    console.log("rows_ = ", rows)
+    function selectsNullOrFull() {
+      if (selected.value.length < items.value.length) {selected.value = items.value.slice(0)}
+      else {selected.value = []}
+    }
+    function toggleAll () {
+        if (selected.value.length) {selected.value = []}
+        else {selected.value = rows.value.slice()}
+      }
 
-    function customSort(rows, sortBy, descending) {
-      console.log("rows_customSort = ", rows)
-      const data = ref(rows)
-      console.log("data = ", data)
-      // const data = [...rows]
-    console.log("sortBy = ", sortBy)
-
+    // Сортировка таблицы
+    function customSort (rows, sortBy, descending) {
+        console.log("Сортировка таблицы")
+        const data = [...rows]
         if (sortBy) {
-          data.value.sort((a, b) => {
+          data.sort((a, b) => {
             const x = descending ? b : a
             const y = descending ? a : b
             if (sortBy === 'name') {
@@ -381,11 +509,8 @@ export default {
             }
           })
         }
-
-        console.log("data_customSort = ", data.value)
-
-        return data.value
-      }
+    return data
+  }
 
     // ----------------------------------------------------------------------------------------------
     // Фиксация колонок
@@ -404,9 +529,25 @@ export default {
         }
       }
     }
+    // const collFixRows = (column, props) => {
+    //   // console.log(colorEditCells.value[column.name][indx.idRows], indx.idRows);
+    //   console.log(column.name, rows.value[props.row.idRows], {...props.row})
+    //   // if(colorEditCells.value[column.name][indx.idRows] !== rows.value[indx.idRows][column.name]) {
+    //   //   return {
+    //   //     'outline': '1px solid #ccc',
+    //   //     'color': 'red',
+    //   //   }
+    //   // }
+    // }
 
     const columnKeys = columns.map(e => e.name)
     const columnKeysReverse = [...columnKeys].reverse()
+    const columnNames = ref([...columnKeys])
+    // console.log("columnNames = ", columnNames)
+
+    const columnLabels = ref(columns.map(e => e.label))
+    // columnLabel.value = columns.map(e => e.label)
+    // console.log("columnNames = ", columnLabel.value)
 
     const IndentsTD = (side) => {
       fistTdWidth.value = fistTd.value.$el.offsetWidth
@@ -449,18 +590,8 @@ export default {
     const RowsInCols = ref({})
     const selectAllFil = ref({})
 
-    // const createRowsInCols = () => {
-    //   const obj = {}
-    //   columnKeys.map(col => obj[col] = rows.map(e => e[col]))
-    //   return obj
-    // }
-
     const createRowsInCols = {}
     columnKeys.map(col => createRowsInCols[col] = rows.value.map(e => e[col]))
-
-    // console.table("columnKeys = ", columnKeys)
-    // console.table("rows.value = ", rows.value)
-    // console.table("createRowsInCols = ", createRowsInCols)
 
     Object.entries(createRowsInCols).map(([key, vals]) => {
         RowsInCols.value[key] = [... new Set(vals)]
@@ -474,9 +605,10 @@ export default {
     function tdInput(val, name, index) {
       let value = val.target.textContent
       !isNaN(value) ? value = Number(value.replace(',', '.')) : null
-      colorEditCells.value[name][index] = value
+      // colorEditCells.value[name][index] = value
+      colorEditCells.value[name].splice(index, 1, value)
       value !== rows.value[index][name] ?
-      modifiedCells.value[index][name] = value : delete modifiedCells.value[index][name]
+          modifiedCells.value[index][name] = value : delete modifiedCells.value[index][name]
     }
 
     function saveEditData() {
@@ -521,7 +653,7 @@ export default {
         let itemKey = Object.keys(item)[0].slice()
         let itemVals = Object.values(item)[0].slice()
 
-        // Собираем объект из выбранных строк в фильтрах по столбцам
+        //  Собираем объект из выбранных строк в фильтрах по столбцам
         filterColumns.value[itemKey] = itemVals
         // Значение автовыбора всех строк в текущем фильтре
 
@@ -556,7 +688,68 @@ export default {
           {delete filterColumns.value[itemKey]}
           idxListfilter.value = []
     })
+
+
+    // watch(() => colorEditCells.value, (item) => {
+    //   console.log("colorEditCells = ", item)
+    // })
+
+
+    // const hhhh = reactive(colorEditCells.value)
+    // Object.keys(colorEditCells.value).forEach(key => {
+    //   watch(() => rows[key], (val) => {console.log(val)})
+    // }, { deep: true })
+
+    // console.log("hhhh = ", hhhh)
+
+    // function funColorEdit(column, row) {
+    //   console.log("column, row = ", column, row)
+
+    //   let xxx = ''
+    //   colorEditCells.value[column.name][row.idRows] !== rows.value[row.idRows][column.name] ? xxx + ' color: #0091EA;' : null
+    //   colorEditCells.value[column.name][row.idRows] !== rows.value[row.idRows][column.name] && xxx + column.fixed === true ?
+    //     xxx +' background-color: white; box-shadow: none' : null
+    //     console.log("xxx = ", xxx)
+    //   return xxx
+    // }
+
+
+    // watchPostEffect (() => {
+    //   console.log("column, row = ", column, row)
+    //   Object.entries(this.createRowsInCols).map(([key, vals]) => {
+
+    //     let xxx = ''
+    //     e[column.name][row.idRows] !== rows.value[row.idRows][column.name] ? xxx + ' color: #0091EA;' : null
+    //     e[column.name][row.idRows] !== rows.value[row.idRows][column.name] && xxx + column.fixed === true ?
+    //       xxx +' background-color: white; box-shadow: none' : null
+    //       console.log("xxx = ", xxx)
+
+    // })
+
+
+    // const ppp = reactive(toRefs(colorEditCells.value))
+    // watchPostEffect (() => {
+    //   console.log("ppp = ", ppp)
+    // })
+
+    // watchEffect(() => {console.log(RowsInCols.value)}, {flush: 'post'})
+
+
+
+
+    // watch(() => colorEditCells.value, (val) => {console.log(val.name)}, { deep: true })
+
     // ----------------------------------------------------------------------------------------------
+    // Отслеживаем все поля объекта
+    // Object.keys(colorEditCells.value).forEach(key => {
+    //   watch(() => colorEditCells.value[key], (val) => {console.log(key, val.slice())}, { deep: true })
+    // })
+    // ----------------------------------------------------------------------------------------------
+
+
+
+    // ----------------------------------------------------------------------------------------------
+
 
     return {
       selected,
@@ -567,6 +760,7 @@ export default {
       pagination,
       pagesNumber: computed(() => Math.ceil(rows.value.length / pagination.value.rowsPerPage)),
       selectedRowsChanged,
+      selectsNullOrFull,
       collFix,
       // Фиксация колонок
       fixRef,
@@ -587,6 +781,14 @@ export default {
       menuShow,
       columnItem,
       filterColumns,
+      visibleColumns,
+      // funColorEdit,
+      // Отображение колонок
+      columnNames,
+      columnLabels,
+
+      toggleAll,
+      // collFixRows,
 
       }
 
@@ -707,4 +909,34 @@ $outline: 0.5px solid white
     // text-align: center
     display: inline-block
 
+
+
+.tryaska:hover
+  animation: example-fab-animate 0.8s cubic-bezier(.36,.07,.19,.97) both
+  // transform: translate3d(0, 0, 0)
+  // backface-visibility: hidden
+  // perspective: 1000px
+
+
+
+
+.example-fab-animate,
+.q-fab:hover .example-fab-animate--hover
+  animation: example-fab-animate 0.82s cubic-bezier(.36,.07,.19,.97) both
+  transform: translate3d(0, 0, 0)
+  backface-visibility: hidden
+  perspective: 1000px
+
+@keyframes example-fab-animate
+  10%, 90%
+    transform: translate3d(-1px, 0, 0)
+
+  20%, 80%
+    transform: translate3d(2px, 0, 0)
+
+  30%, 50%, 70%
+    transform: translate3d(-4px, 0, 0)
+
+  40%, 60%
+    transform: translate3d(4px, 0, 0)
 </style>
