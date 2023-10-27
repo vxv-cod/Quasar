@@ -34,7 +34,7 @@
             <div class="">
 
               <q-list>
-                <q-item v-for="(item, idx) in columnNames" :key="item" tag="label" v-ripple>
+                <q-item v-for="(item, idx) in items" :key="item" tag="label" v-ripple>
 
                   <q-item-section side center class="">
                     <q-checkbox v-model="selected"
@@ -121,7 +121,9 @@ const {
 const items = ref([])
 const selected = ref([])
 const fistSLengthSelected = ref([])
-onMounted(() => { fistSLengthSelected.value = selected.value.length })
+onMounted(() => { fistSLengthSelected.value = selected.value.length
+  selected.value = columnNames.value.slice()
+})
 
 watchPostEffect(() => {[
   items.value = columnNames.value.slice(),
