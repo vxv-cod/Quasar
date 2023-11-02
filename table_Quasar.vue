@@ -1,16 +1,17 @@
 <template>
-  <!-- <p><h6>zeroModifiedCells: {{ zeroModifiedCells }}</h6></p> -->
+  <!-- <p><h6>columns: {{ columns }}</h6></p> -->
+  <!-- <p><h6>modifiedCells: {{ modifiedCells }}</h6></p> -->
   <!-- <div class="blackout"></div> -->
 
 
-  <p><h6>visibleColumns: {{ visibleColumns }}</h6></p>
+  <!-- <p><h6>visibleColumns: {{ visibleColumns }}</h6></p> -->
   <!-- <pre>columns: {{ columns }}</pre> -->
   <!-- <p><h6>menuShow: {{ menuShow }}</h6></p> -->
-  <p><h6>filterColumns: {{ filterColumns }}</h6></p>
+  <!-- <p><h6>filterColumns: {{ filterColumns }}</h6></p> -->
   <!-- <p><h6>showEditIcon: {{ showEditIcon }}</h6></p> -->
-  <p><h6>colorEditCells: {{ colorEditCells }}</h6></p>
-  <p><h6> RowsInCols: {{ RowsInCols }}</h6></p>
-  <!-- <p><h6>rows: {{ rows }}</h6></p> -->
+  <!-- <p><h6>colorEditCells: {{ colorEditCells }}</h6></p> -->
+  <!-- <p><h6> RowsInCols: {{ RowsInCols }}</h6></p> -->
+  <p><h6>rows: {{ rows }}</h6></p>
   <!-- <p><h6>blackout: {{ blackout }}</h6></p> -->
   <!-- <p><h6> selectAllFil: {{ selectAllFil }}</h6></p> -->
   <!-- <p><h6> createRowsInCols: {{ createRowsInCols }}</h6></p> -->
@@ -217,6 +218,7 @@
           <!-- <div class="my-flex-container" > -->
             <div class="my-flex-inner-left">
               <span >{{ column.label }}</span>
+              <!-- <pre><span >{{ props.colsMap }}</span></pre> -->
             </div>
 
             <!-- <pre>{{ props.selected }}</pre> -->
@@ -257,39 +259,69 @@
 
       <q-td v-for="(column, index) in props.cols" :key="column.name" valign="middle"
         :props="props"
-        :class="selected.includes(props.row) ? `bg-${colorTabSelectRow}` : null"
         :contenteditable="showEditIcon"
-        style=""
+        :class="selected.includes(props.row) ? `bg-${colorTabSelectRow}` : null"
         :style="[
             collFix(column),
-            // collFixRows(column, props),
+
+            celleditTrue(column.name, props.row.idRows)
+
+              // let stl = ''
+              // if(rows[props.row.idRows]) {
+              //   console.log(props.row.idRows)
+
+              //   if (colorEditCells[column.name][props.rowIndex] !== rows[props.rowIndex][column.name]) {
+              //     stl + 'color: #0091EA; '
+              //       if(column.fixed === true) {
+              //           return stl + 'background-color: white; box-shadow: none'
+              //       }
+              //   }}
+              //   console.log(stl)
+              // return stl
+            // }
+          // }
+            // celleditTrue(column, props.row.idRows),
             // colorEditCells[column.name][props.rowIndex] !== rows[props.rowIndex][column.name] ? 'color: #0091EA;' : null,
             // colorEditCells[column.name][props.rowIndex] !== rows[props.rowIndex][column.name] && column.fixed === true ?
             //   'background-color: white; box-shadow: none' : null,
 
 
 
-            colorEditCells[column.name][props.row.idRows] !== rows[props.row.idRows][column.name] ? 'color: #0091EA;' : null,
-            colorEditCells[column.name][props.row.idRows] !== rows[props.row.idRows][column.name] && column.fixed === true ?
-              'background-color: white; box-shadow: none' : null,
+            // colorEditCells[column.name][props.row.idRows] !== rows[props.row.idRows][column.name] ? 'color: #0091EA;' : null,
+            // colorEditCells[column.name][props.row.idRows] !== rows[props.row.idRows][column.name] && column.fixed === true ?
+              // 'background-color: white; box-shadow: none' : null,
             // funColorEdit(column, props.row)
         ]"
 
         @input="(val) => tdInput(val, column.name, props.row.idRows)"
 
         >
+
+        <!--
+          rows[props.row.idRows] ?
+            colorEditCells[column.name][props.rowIndex] !== rows[props.rowIndex][column.name] ?
+              'text-light-blue-13' : null : null
+
+          :class="selected.includes(props.row) ? `bg-${colorTabSelectRow}` : null"
+          :class="selected.includes(props.row) ? `bg-${colorTabSelectRow}` : null"
+
+         -->
         <!-- <div v-if="!loading"> -->
           <!-- <p v-if="showEditIcon" v-text="props.row[column.name]"></p>
           <p v-else v-text="props.row[column.name]"></p> -->
 
-          <p v-if="showEditIcon" v-text="column.value"></p>
-          <p v-else v-text="column.value"></p>
+          <p style="background-color: #ccc;" v-if="showEditIcon"  v-text="column.value"></p>
+          <p v-else               v-text="column.value"></p>
+
+          <!-- <pre>{{ props.row.idRows }}</pre> -->
 
           <!-- <pre>{{ colorEditCells[column.name][props.row.idRows] }}</pre> -->
           <!-- <pre>{{ rows[props.row.idRows][column.name] }}</pre> -->
           <!--
             <p v-if="showEditIcon" v-text="props.row[column.name]"></p>
             <p v-else v-text="props.row[column.name]"></p>
+          <p v-else v-text="colorEditCells[column.name][props.row.idRows]"></p>
+
          -->
 
 
@@ -406,7 +438,7 @@
 import loadRowsCols from "../store/loadRowsCols.json"
 import menuFilter from "./vxv_menu_filter.vue"
 import blackout from "./blackout.vue"
-import vxvMenu from "./vxv_menu.vue"
+import vxvMenu from "./vxv_Table_visiable_column.vue"
 
 // import { useMousePosition } from "./useMousePosition.js"
 import { ref, reactive, computed, toRefs, watch, onMounted, watchEffect, isRef,
@@ -438,8 +470,8 @@ const {loadRows, loadColumns} = loadRowsCols
 loadColumns.forEach((e, i) => {
   e["field"] = e.name
   e['visibleCol'] = e.name
-  // e['sortable'] = true
-  // e['label'].includes('%') ? e['sort'] = (a, b) => parseInt(a, 10) - parseInt(b, 10) : null
+  e['sortable'] = true
+  e['label'].includes('%') ? e['sort'] = (a, b) => parseInt(a, 10) - parseInt(b, 10) : null
 })
 
 // const visibleColumns = computed(() => loadColumns.map(e => e['visibleCol']))
@@ -452,11 +484,9 @@ loadRows.forEach((e, i) => e['idRows'] = i)
 const rows = ref(loadRows)
 const columns = reactive(loadColumns)
 
-// rows.value.forEach((e, i) => e['idRows'] = i)
-
-
 console.log("rows_ = ", rows.value)
 console.log("columns_ = ", columns)
+
 
 
 export default {
@@ -512,6 +542,8 @@ export default {
     return data
   }
 
+
+
     // ----------------------------------------------------------------------------------------------
     // Фиксация колонок
     // Стили для фиксируемых колонок
@@ -529,16 +561,7 @@ export default {
         }
       }
     }
-    // const collFixRows = (column, props) => {
-    //   // console.log(colorEditCells.value[column.name][indx.idRows], indx.idRows);
-    //   console.log(column.name, rows.value[props.row.idRows], {...props.row})
-    //   // if(colorEditCells.value[column.name][indx.idRows] !== rows.value[indx.idRows][column.name]) {
-    //   //   return {
-    //   //     'outline': '1px solid #ccc',
-    //   //     'color': 'red',
-    //   //   }
-    //   // }
-    // }
+
 
     const columnKeys = columns.map(e => e.name)
     const columnKeysReverse = [...columnKeys].reverse()
@@ -590,13 +613,25 @@ export default {
     const RowsInCols = ref({})
     const selectAllFil = ref({})
 
-    const createRowsInCols = {}
-    columnKeys.map(col => createRowsInCols[col] = rows.value.map(e => e[col]))
 
-    Object.entries(createRowsInCols).map(([key, vals]) => {
-        RowsInCols.value[key] = [... new Set(vals)]
-        selectAllFil.value[key] = [... new Set(vals)]
+    watch(() => showEditIcon.value, (val) => {
+      columns.forEach(e => e['sortable'] = !val)
+    })
+
+    // const createRowsInCols = {value: {}}
+    // columnKeys.map(col => createRowsInCols['value'][col] = rows.value.map(e => e[col]))
+
+    const createRowsInCols = computed(() => {
+        const obj = {}
+        columnKeys.map(col => obj[col] = loadRows.map(e => e[col]))
+        return obj
+    })
+
+
+    Object.entries(createRowsInCols.value).map(([key, vals]) => {
+        RowsInCols.value[key] = vals.slice()
         colorEditCells.value[key] = vals.slice()
+        selectAllFil.value[key] = vals.slice()
       })
       modifiedCells.value = rows.value.map(() => new Object())
       // loadRows.map((e, i) => modifiedCells[i] = new Object())
@@ -607,7 +642,10 @@ export default {
       !isNaN(value) ? value = Number(value.replace(',', '.')) : null
       // colorEditCells.value[name][index] = value
       colorEditCells.value[name].splice(index, 1, value)
-      value !== rows.value[index][name] ?
+      // RowsInCols.value[name].splice(index, 1, value)
+
+      const rowsfind = rows.value.find(e => e.idRows === index)
+      value !== rowsfind[name] ?
           modifiedCells.value[index][name] = value : delete modifiedCells.value[index][name]
     }
 
@@ -616,8 +654,12 @@ export default {
         if(Object.keys(e).length !== 0) {
           Object.entries(e).forEach(([key, val]) => {
             RowsInCols.value[key][i] = val
+            // RowsInCols.value[key].splice(i, 0, val)
             selectAllFil.value[key][i] = val
             rows.value[i][key] = val
+            // colorEditCells.value[key][i] = val
+            // loadRows[key][i] = val
+            createRowsInCols.value[key][i] = val
           })
         }
         modifiedCells.value[i] = new Object()
@@ -648,6 +690,19 @@ export default {
     const idxListfilter = ref([])
 
 
+    const celleditTrue = (name, idx) => {
+      const rowsfind = rows.value.find(e => e.idRows === idx)
+      const rowsfindIndex = rows.value.findIndex(e => e.idRows === idx)
+      if(rowsfind[name] !== colorEditCells.value[name][rowsfindIndex]) {
+        return {'color':'#0091EA'}
+      }
+    }
+
+    watch(() => rows.value, () => {
+        modifiedCells.value = rows.value.map(() => new Object())
+      }
+    )
+
     watch(() => columnItem.value, (item) => {
         // Определяем ключ и значение отправленное из диалога фильтра
         let itemKey = Object.keys(item)[0].slice()
@@ -659,17 +714,19 @@ export default {
 
         if(Object.values(filterColumns.value).length >= 1) {
           let key0 = Object.keys(filterColumns.value)[0]
-          const Rows0 = createRowsInCols[key0].slice()
+          const Rows0 = createRowsInCols.value[key0].slice()
           idxListfilter.value = []
 
           // Находим индескы из исходного списка по полученным значениям выбора в фильтрах
-          createRowsInCols[itemKey].forEach((e, i) => {if (itemVals.includes(e)) {idxListfilter.value.push(i)}})
+          createRowsInCols.value[itemKey].forEach((e, i) => {if (itemVals.includes(e)) {idxListfilter.value.push(i)}})
 
           // Из полного списка строк в таблице фильтруем те, которые есть в списке выбранных индексов
           rows.value = loadRows.filter((e, i) => idxListfilter.value.includes(i) )
 
+          console.log("rows.value = ", rows.value)
+
           //  Корректируем фильтра в столбцах, согласно полученным индексам
-          Object.entries(createRowsInCols).forEach(([key, vals]) => {
+          Object.entries(createRowsInCols.value).forEach(([key, vals]) => {
             colorEditCells.value[key] = vals.filter((e, i) => idxListfilter.value.includes(i))
 
             if (key !== itemKey) {
@@ -788,8 +845,8 @@ export default {
       columnLabels,
 
       toggleAll,
-      // collFixRows,
-
+      celleditTrue,
+      createRowsInCols,
       }
 
     }

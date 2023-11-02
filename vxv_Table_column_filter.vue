@@ -1,8 +1,8 @@
 <template>
-
-  <!-- <div class=""> -->
-    <q-btn :disable="showEditIcon" flat round dense color="white" size="sm"
-      icon="mdi-filter-variant" style="" class="q-ml-md " :class="colorBtn"
+  <div class="boxFill" style="margin: auto;"
+  >
+    <q-btn :disable="showEditIcon" flat round color="white" size="sm"
+      icon="mdi-filter-variant" :class="colorBtn"
       >
 
       <q-tooltip v-if="!showEditIcon" anchor="top middle" self="bottom middle">Фильтр</q-tooltip>
@@ -10,20 +10,8 @@
 
       <q-menu anchor="top right" self="top left" transition-show="jump-right" transition-hide="jump-left"
         @update:model-value="(val) => myUpdateModelValue(val)"
-        style="
-          /* background-color: rgba(0, 0, 0, 0); */
-        ">
-
-        <!--
-          @show="menuShow = true"
-          @hide="menuShow = false"
-          $emit('update:modelValue', $event.target.value)
-          @update:model-value="$emit('update:modelValue', modelValue=!modelValue)"
-          (val) => $emit('update:menuShow', val)
-           @update:model-value="(val) => $emit('update:modelValue', val)"
-
-         -->
-
+        style=""
+      >
         <div bordered class="" style=" max-width: 250px">
 
           <q-card
@@ -42,8 +30,6 @@
               </q-btn>
             </div>
           </q-card>
-
-          <!-- @change="(val) => $emit('update:selected', val)" -->
 
             <!-- Список значений по колонке -->
             <q-card class="">
@@ -65,29 +51,27 @@
               </q-list>
             </q-card>
 
-        </div>
+          </div>
 
-      </q-menu>
-    </q-btn>
-  <!-- </div> -->
-  <!-- <q-resize-observer @resize="(size) => {console.log('resize-observer = ', size)}" /> -->
+        </q-menu>
+      </q-btn>
 
-  <!-- <pre> items {{ items }}</pre> -->
-  <!-- <pre> selected {{ selected }}</pre> -->
-  <!-- <pre> fistSLengthSelected {{ fistSLengthSelected }}</pre>
-  <pre> selected {{ selected.length }}</pre> -->
-
+      <!-- <q-resize-observer @resize="(size) => {console.log('resize-observer = ', size)}" /> -->
+        <!-- <pre> items {{ items }}</pre> -->
+        <!-- <pre> selected {{ selected }}</pre> -->
+        <!-- <pre> fistSLengthSelected {{ fistSLengthSelected }}</pre> -->
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch, watchPostEffect, computed, toRefs, defineProps, defineEmits } from 'vue'
+import { ref, onMounted, onUpdated, watch, watchPostEffect, computed, toRefs, defineProps, defineEmits } from 'vue'
 
 const props = defineProps({
     menuShow: {
       type: Boolean,
       default: () => false,
     },
-    RowsInColsItem: {
+    columnValue: {
       type: Array,
       default: () => [],
     },
@@ -133,10 +117,9 @@ const emit = defineEmits([
 //   },
 // })
 
-
 const indeterminate = ref(false)
 const {
-  RowsInColsItem,
+  columnValue,
   outsideSelect,
   columnKey,
   showEditIcon,
@@ -145,61 +128,49 @@ const {
 
 const items = ref([])
 const selected = ref([])
-const fistSLengthSelected = ref([])
-onMounted(() => { fistSLengthSelected.value = selected.value.length })
+const fistSLengthSelected = ref(null)
+const selectedLength = computed(() => selected.value.length)
+const itemsLength = computed(() => items.value.length)
 
-// console.log("outsideSelect = ", outsideSelect.value)
-
-// watch(() => RowsInColsItem.value, (val) => items.value = val)
-// onMounted(() => {
-//   selected.value = outsideSelect.value
-// })
-
-watchPostEffect(() => {[
-  items.value = RowsInColsItem.value.slice(),
-  // selected.value = [...new Set(outsideSelect.value)],
-  selected.value = outsideSelect.value.slice(),
-  // emit('update:outsideSelect', selected.value)
-]
+onUpdated(() => {'- onUpdated -', columnKey.value})
+onMounted(() => {
+  fistSLengthSelected.value = selectedLength.value
 })
 
+watchPostEffect(() => [
+    items.value = columnValue.value.slice(),
+    selected.value = outsideSelect.value.slice(),
+])
 
+watch(() => itemsLength.value, (val) => {selected.value = columnValue.value.slice()})
 
 function myUpdateModelValue(bool){
   emit('update:menuShow', bool)   // отправляем сигнал о закрытии блока затемнения
   if (bool === false) {
-    // this.search = null
 
     // Если при выходе из фильтра selected пустой, то заплнить все
-    if(selected.value.length === 0) { selected.value = items.value.slice() }
+    if(selectedLength.value === 0) { selected.value = items.value.slice() }
     // Если при хакритии selected изменился после открытия фильтра,
     // т.е. его длина другая, то отправляем из фильтра родителю изменения
-    if(fistSLengthSelected.value !== this.selected.length) {
+    if(fistSLengthSelected.value !== selectedLength.value) {
         emit('update:columnItem', {[columnKey.value]: selected.value})
       }
-  } else {fistSLengthSelected.value = this.selected.length}
-
-
-
-
+  } else {fistSLengthSelected.value = selectedLength.value}
 }
 
 function selectsNullOrFull() {
-  if (selected.value.length < items.value.length) {selected.value = items.value.slice(0)}
+  if (selectedLength.value < itemsLength.value) {selected.value = items.value.slice(0)}
   else {selected.value = []}
 }
 
 function iconSelectAll() {
-  if (selected.value.length === 0) {return "mdi-checkbox-multiple-blank-outline"}
-  if (selected.value.length > 0 && selected.value.length < items.value.length) {return "mdi-checkbox-multiple-blank-outline"}
-  if ( selected.value.length === items.value.length) {return "mdi-checkbox-multiple-marked-outline"}
+  if (selectedLength.value === 0) {return "mdi-checkbox-multiple-blank-outline"}
+  if (selectedLength.value > 0 && selectedLength.value < itemsLength.value) {return "mdi-checkbox-multiple-blank-outline"}
+  if ( selectedLength.value === itemsLength.value) {return "mdi-checkbox-multiple-marked-outline"}
 }
 
 </script>
 
-
-
 <style lang="sass">
-// .box
-  // z-index: 101
+
 </style>

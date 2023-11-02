@@ -34,6 +34,7 @@
   left: 0
   z-index: -1
   opacity: 0
+  // pointer-events: none
   transition-property: opacity top z-index
   transition-duration: 0.5s
 </style>
