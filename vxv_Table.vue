@@ -1,23 +1,34 @@
 <template>
-<br><br>rows {{ rows }}
-<br><br>loadRows {{ loadRows }}
+
+<!--
+  xs (extra small),
+  sm (small),
+  md (medium),
+  lg (large),
+  xl (extra large)
+  -->
+
+<!-- <br><br>rows {{ rows }} -->
+<!-- <br><br>loadRows {{ loadRows }} -->
 <!-- <br><br>selectAllFil {{ selectAllFil }} -->
 <!-- headers {{ headers }} -->
 <!-- <br><br>columns {{ columns }} -->
+<!-- <br><br>sumForColList {{ sumForColList }} -->
+<!-- <br><br>headers {{ headers }} -->
+
 <!-- <br><br>visibleColumns {{ visibleColumns }} -->
 <!-- <br><br>filterColumns {{ filterColumns }}
 <br><br>defaultColumns {{ defaultColumns }}
 <br><br>columnsIndexRow {{ columnsIndexRow }}
 <br><br>columnItem {{ columnItem }} -->
 <!-- <br><br>selected {{ selected }}
-<br><br>headers {{ headers }}
 <br><br>fistTdWidth {{ fistTdWidth }}
 <br><br>pagination {{ pagination }}
 <br><br>pagesNumber {{ pagesNumber }} -->
-<br><br>rowsPagsInd {{ rowsPagsInd }}
-<br><br>search {{ search }}
+<!-- <br>rowsPagsInd {{ rowsPagsInd }} -->
+<!-- <br>search {{ search }} -->
 
-<div class="contener" >
+<div class="contener" style="">
 
   <!-- todo Верхняя панель Кнопки -->
   <div class="panel top" >
@@ -44,7 +55,10 @@
 
     <div>
       <!-- Сумма по колонкам -->
-      <q-btn flat round color="white" size="sm" icon="mdi-sigma">
+      <q-btn flat round color="white" size="sm" icon="mdi-sigma"
+        @click="showSumRows = !showSumRows"
+        :class="showSumRows ? `text-amber` : null"
+        >
         <q-tooltip anchor="top middle" self="bottom middle">Сумма по колонкам</q-tooltip>
       </q-btn>
 
@@ -76,19 +90,6 @@
 
     <q-space />
 
-    <!--
-      sort-descending
-      sort-ascending
-     -->
-
-    <!--
-      xs (extra small),
-      sm (small),
-      md (medium),
-      lg (large),
-      xl (extra large)
-     -->
-
     <!-- Пагинация -->
     <div class="row justify-center" style="margin: 5px;">
       <q-pagination
@@ -104,19 +105,17 @@
         />
     </div>
 
-
-
     <div class="" style="display: flex; ">
       <q-knob
         :min="5"
-        :max="50"
+        :max="loadRows.length"
         :inner-min="5"
         v-model="pagination.rowsPerPage"
         size="20px"
         :thickness="0.2"
         color="black"
         track-color="white"
-        style="display: flex; margin-left: 5px;"
+        style="margin: auto;"
       />
       <input type="number"
         v-model.number="pagination.rowsPerPage"
@@ -125,23 +124,11 @@
       <q-tooltip anchor="top middle" self="bottom middle">Строк в таблице</q-tooltip>
     </div>
 
-
-
     <div class="search" style="" >
       <input type="text" placeholder="Поиск по таблице" v-model="search">
       <q-icon v-if="search === ''" name="search" size="sm" />
       <q-icon v-else name="clear" class="cursor-pointer" @click="search = ''" size="sm" />
     </div>
-
-
-    <!-- <q-input autogrow dark dense standout v-model="search" input-class="" class="" style="">
-      <template v-slot:append>
-        <q-icon v-if="search === ''" name="search" style=""/>
-        <q-icon v-else name="clear" class="cursor-pointer" @click="search = ''" />
-      </template>
-    </q-input> -->
-
-
 
     <visiableColumn
       :iconBtn="`mdi-view-column`"
@@ -165,7 +152,7 @@
   </div>
 
   <div class="tableBox">
-    <table class="">
+    <table >
       <!-- todo Заголовок таблицы -->
       <thead >
         <tr>
@@ -278,25 +265,30 @@
         </tr>
       </tbody>
 
-      <!-- <tfoot>
-        <tr>
-          <td :colspan="headers.length + 1"
-            :style="[
-              `position: sticky; left: 0; z-index: 4;`,
-            ]"
-          >
-            Футер
+      <tfoot >
+        <tr v-if="showSumRows">
+          <th  class="" style="">
+            <p ><q-btn flat round color="black" size="sm" icon="mdi-sigma"></q-btn></p>
+          </th>
+          <th v-for="name in sumForColList" :key="name">
+            <p >{{ showSumRows ? name : null }}</p>
+          </th>
+        </tr>
+        <tr class="tfootBotton">
+          <td :colspan="visibleColumns.length + 1">
+            <!-- Футер -->
           </td>
         </tr>
-      </tfoot> -->
+      </tfoot>
 
     </table>
-  </div>
-      <div class="panel botton" >
+
+    </div>
+      <!-- <div class="panel botton" v-if="!showSumRows">
         <p>Нижний Div</p>
-      </div>
-  <blackout :menuShow="menuShow"/>
-  </div>
+      </div> -->
+      <blackout :menuShow="menuShow"/>
+    </div>
 
 
 
@@ -582,50 +574,49 @@ watchPostEffect(() => {
 })
 
 const IndentsTD = (side) => {
-      // Собираем списки с ширинами колонок и их именами
-      let widths = []
-      let keys = []
-      const columnKeysList = side === 'right' ? columnKeysReverse : columnKeys
-      if(fixRef.value !== null) {columnKeysList.forEach(x =>{
-        fixRef.value?.forEach(e => {
-          if(x === e.id) {
-            widths.push(e.clientWidth)
-            keys.push(e.id)
-          }})
-      })}
-      // Определяем отступы от границ
-      let sumitem = 0
-      keys?.forEach((e, i) => {
-        sumitem += widths[i]
-        headers.value.forEach(header => {
-          if(header.name === e) {header[side] = sumitem - widths[i]
-            header['width'] = widths[i]
-        }})
-      })
-      sumitem = 0
-    }
-
-    watch(() => fixRef, (val) =>
-      {
-        IndentsTD('left')
-        IndentsTD('right')
-      },
-      { deep: true }
-    )
-
-
-  // Сбрасываем все фиксации
-  watch(() => lockOutline.value, (bool) => {
-    if(bool === false) {
-      headers.value.forEach(e => e.fixed = false)
-    }
+  // Собираем списки с ширинами колонок и их именами
+  let widths = []
+  let keys = []
+  const columnKeysList = side === 'right' ? columnKeysReverse : columnKeys
+  if(fixRef.value !== null) {columnKeysList.forEach(x =>{
+    fixRef.value?.forEach(e => {
+      if(x === e.id) {
+        widths.push(e.clientWidth)
+        keys.push(e.id)
+      }})
+  })}
+  // Определяем отступы от границ
+  let sumitem = 0
+  keys?.forEach((e, i) => {
+    sumitem += widths[i]
+    headers.value.forEach(header => {
+      if(header.name === e) {header[side] = sumitem - widths[i]
+        header['width'] = widths[i]
+    }})
   })
+  sumitem = 0
+}
+
+watch(() => fixRef, (val) =>
+  {
+    IndentsTD('left')
+    IndentsTD('right')
+  },
+  { deep: true }
+)
+
+// Сбрасываем все фиксации
+watch(() => lockOutline.value, (bool) => {
+  if(bool === false) {
+    headers.value.forEach(e => e.fixed = false)
+  }
+})
 
 // ------------------------------------------------------------------------------------------------
 // Пагинация
 const pagination = ref({
   page: 1,
-  rowsPerPage: 5,
+  rowsPerPage: loadRows.length,
 
   // sortBy: 'desc',
   // descending: false,
@@ -718,23 +709,57 @@ watch(() => search.value, (v) => {
 })
 
 // ------------------------------------------------------------------------------------------------
+// Сумма по колонкам
+const showSumRows = ref(false)
 
+function sumForColFUN(arr) {
+  if(arr.some(tag => isNaN(tag))) {return null}
+  else {
+    let xxx = arr.reduce((sum, current) => sum + current, 0)
+    if(Number.isInteger(xxx)) {return xxx} else {return xxx.toFixed(2)}
+  }
+}
 
-
+const sumForColList = computed(() => {
+  const obj = {}
+  const colrow = perevorot(rows.value)
+  visibleColumns.value.map(name => obj[name] = sumForColFUN(colrow[name]))
+  return  obj
+})
+// ------------------------------------------------------------------------------------------------
 </script>
 
-
-<style lang="sass">
+<style lang="sass" >
 $color: #90A4AE
+$box-shadow: $blue-grey-5
 $column: 2
 $max-width: 600px
-$border: 1px solid #cccccc77
+$border: 1px solid $blue-grey-1
 $outline: 0.5px solid white
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button
   -webkit-appearance: none
   // -webkit-appearance: textfield
+
+.tableBox
+  scrollbar-width: thin
+  scrollbar-color: $blue-grey-8 $color
+  &::-webkit
+    &-scrollbar               // скроллбар
+      width: 6px
+      &-button                // кнопка
+        background: $blue-grey-8
+        height: 6px
+      &-track                 // трек
+        background: $color
+      &-track-piece           // видимая часть трека
+        background: $color
+      &-thumb                 // ползунок
+        background: $blue-grey-8
+
+body
+  background: #ccf
 
 input[type='number']
   -moz-appearance: textfield
@@ -745,149 +770,153 @@ input[type='number']
   width: 22px
   font-size: small
   text-align: center
+  color: white
+  opacity: 0.8
 
 .search
   display: flex
   margin: 0 10px
   background-color: $blue-grey
   outline: $border
+  color: white
   input
     background-color: inherit
     border: none
     margin: 0
     padding: 0 10px
-    // width: 100px
-    font-size: medium
+    font-size: 12px
     // text-align: center
     display: inline-block
-
+    color: white
+    width: 100%
   input:focus, input:focus + .q-icon
     outline: $outline
     background-color: $color
     background-color: white
     color: black
-
-
   .q-icon
-    // background-color: inherit
-    // display: inline-block
-    // border: none
     color: white
-
-
-
+    opacity: 0.8
 .search:hover
   background-color: $color
-  // background-color: white
   color: black
 
-
-
-
-// .search:hover
-//   // .search:click
-//   outline: $outline
-//   background-color: $color
-
-
-// .icon-rtl
-//   padding-right: 25px
-//   background-size: 20px
-
-
-body
-  position: relative
-  min-height: 100%
-  background: #ccf
-  // position: relative
-  // display: flex
+.q-page-container
+  // position: fixed
+  // right: 0
+  // left: 0
+  // bottom: 0
+  // top: 0
+  // // height: 100%
+  // height: 0px
+  // height: 660px
 
 
 .contener
   margin: 5px
   background-color: white
-  // position: relative
-  bottom: 0
-  left: 0
-  right: 0
-  height: 100%
-  // height: 500px
-
+  height: inherit
+  // height: 100%
+  // height: 60px
+  outline: $outline
+  transition-property: display opacity height
+  transition-duration: 0.3s
   .panel
+    border: $outline
     display: flex
     background-color: $blue-grey
     min-height: 35px
     align-items: center
     position: sticky
-    z-index: 5
+    z-index: 4
     left: 0
     top: 0
     &.botton
-      box-shadow: 0px -5px 10px #78909C
+      box-shadow: 0px -5px 10px $box-shadow
       bottom: 0
       background-color: $color
-      margin-top: 5px
+      margin-top: 1px
       outline: $outline
     p
       padding: 0 5px
       margin: auto 5px
+
   .tableBox
-    margin-top: 0.5px
     overflow: auto
     height: inherit
-
-
-table
-  // margin: 10px
-  border-collapse: collapse
-  vertical-align: middle
-  text-align: center
-  width: 100%
-
-  overflow: auto
-  height: inherit
-
-  transition-property: display opacity height
-  transition-duration: 0.5s
-
-  p
-    height: 100&
-    vertical-align: middle
-    margin: auto
-
-  thead
-    tr
-      box-shadow: 0px 5px 10px #78909C
-      position: sticky
-      top: 0
-      z-index: 7
-      height: 35px
-    th
-      background-color: $color
-      padding: 5px
-      user-select: none
-      outline: $outline
-    .boxTd
-      display: flex
+    position: relative
+    table
+      border-collapse: collapse
       vertical-align: middle
       text-align: center
-
-  tbody
-    td
+      width: 100%
       height: inherit
-      z-index: 1
-      outline: $border
-      background-color: white
-      padding: 5px 5px
-      transition-property: display opacity
+      transition-property: display opacity height
       transition-duration: 0.5s
-    td:nth-child(3)
-      text-align: left
+      p
+        height: 100&
+        vertical-align: middle
+        margin: auto
+      thead
+        tr
+          box-shadow: 0px 5px 10px $box-shadow
+          position: sticky
+          top: 0
+          z-index: 7
+          height: 35px
+          outline: $outline
+
+        th
+          background-color: $color
+          padding: 5px
+          user-select: none
+          outline: $outline
+        .boxTd
+          display: flex
+          vertical-align: middle
+          text-align: center
+      tbody
+        td
+          height: inherit
+          z-index: 1
+          outline: $border
+          background-color: white
+          padding: 5px 5px
+          transition-property: display opacity
+          transition-duration: 0.5s
+        td:nth-child(3)
+          text-align: left
+      tfoot
+        tr
+          background-color: $blue-grey-3
+          align-items: center
+          z-index: 4
+          position: sticky
+          left: 0
+          right: 0
+          top: 0
+          bottom: 0
+          // bottom: 50px
+          outline: $outline
+          th
+            margin: 0
+            padding: 0
+            // max-height: 25px
+            outline: $outline
+            transition-property: display opacity
+            transition-duration: 0.5s
+        .tfootBotton
+          box-shadow: 0px -5px 10px $box-shadow
+          bottom: 0
+          background-color: $blue-grey
+          min-height: 25px
+          height: 25px
+          outline: $outline
 
 
 
-  .ext-view-off
-    display: none
+  // .ext-view-off
+  //   display: none
 
 
 // .tryaska:hover
