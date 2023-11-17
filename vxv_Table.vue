@@ -7,11 +7,12 @@
   lg (large),
   xl (extra large)
   -->
+  <br><br>fistTdWidth {{ fistTdWidth }}
 
 <!-- <br><br>rows {{ rows }} -->
 <!-- <br><br>loadRows {{ loadRows }} -->
 <!-- <br><br>selectAllFil {{ selectAllFil }} -->
-<!-- headers {{ headers }} -->
+<!-- <pre>headers {{ headers }}</pre> -->
 <!-- <br><br>columns {{ columns }} -->
 <!-- <br><br>sumForColList {{ sumForColList }} -->
 <!-- <br><br>headers {{ headers }} -->
@@ -22,7 +23,6 @@
 <br><br>columnsIndexRow {{ columnsIndexRow }}
 <br><br>columnItem {{ columnItem }} -->
 <!-- <br><br>selected {{ selected }}
-<br><br>fistTdWidth {{ fistTdWidth }}
 <br><br>pagination {{ pagination }}
 <br><br>pagesNumber {{ pagesNumber }} -->
 <!-- <br>rowsPagsInd {{ rowsPagsInd }} -->
@@ -155,36 +155,46 @@
     <table >
       <!-- todo Заголовок таблицы -->
       <thead >
-        <tr>
+        <tr v-for="rowH in countRowsHeder" :key="rowH">
+          <!-- ---------------------------------------------- -->
           <th ref="fistTd"
-            :style="`width: 34px; position: sticky; left: 0; z-index: 5;`"
+            v-if="rowH === 1"
+            :style="`position: sticky; left: 0; z-index: 7; `"
+            :rowspan="2"
             >
             <q-checkbox class="text-white" size="xs" dense style="" color="black"
               v-model="selectedAll"
               @click="toggleAll"
               />
           </th>
-
-          <th v-for="col in headers" :key="col.idCol"
+          <!-- ---------------------------------------------- -->
+          <th v-for="(col, idx) in headers" :key="col.idCol"
+            v-show="vifCelsHed(col, rowH)"
+            :id="vifCelsHed(col, rowH) ? col.name : null"
             :ref="col.fixed ? 'fixRef' : 'notfixRef'"
-            :id="col.name"
             :style="[
               visibleColumns.includes(col.visibleCol) ? null : 'display: none; ',
-              collFix(col, 5),
+              iconShowHeds(col, rowH) ? collFix(col, 5) : null,
             ]"
+            :rowspan="countRowsHeder.length == 2 && rowH === 1 && col.mergeParentName && col.colspan > 1 ? 1 : 2"
+            :colspan="rowH === 1 ? col.colspan : 1"
+
             >
-            <div class="boxTd ">
+            <div class="thHeaderBox " >
               <!-- Текст в ячейке -->
               <p >
-                {{ col.label }}
+                {{ rowH }}
+                {{
+                  rowH === 1 && col.mergeParentName && col.colspan !== 1 ?
+                  col.mergeParentName : col.label
+                }}
               </p>
-              <!-- <br><pre>{{ col.countSorted }}</pre> -->
 
               <div style="display: flex;">
 
                 <!-- фиксации колонок -->
                 <q-btn flat round color="white" size="sm" icon="mdi-lock-outline"
-                  v-if="lockOutline"
+                  v-if="lockOutline && iconShowHeds(col, rowH)"
                   @click="col.fixed = !col.fixed"
                   :class="[
                     lockOutline ? `tryaska` : null,
@@ -195,7 +205,7 @@
 
                 <!-- фильтрации колонок -->
                 <menuFilter
-                  v-if="filterVariant"
+                  v-if="filterVariant && iconShowHeds(col, rowH)"
                   v-model:menuShow="menuShow"
                   v-model:columnItem="columnItem"
                   :columnTitle="col.label"
@@ -210,7 +220,7 @@
                 <!-- Сортировка в колонках -->
                 <q-btn flat round color="white" size="sm"
                   :icon="['mdi-sort', 'mdi-sort-ascending', 'mdi-sort-descending'][col.countSorted]"
-                  v-if="sortGeneral"
+                  v-if="sortGeneral && iconShowHeds(col, rowH)"
                   @click="rows = customSort(col); !sortGeneral ? col.countSorted = 0 : null"
                   :class="[
                     sortGeneral ? `tryaska` : null,
@@ -266,8 +276,8 @@
       </tbody>
 
       <tfoot >
-        <tr v-if="showSumRows">
-          <th  class="" style="">
+        <tr v-if="showSumRows" class="tfootBottonSum">
+          <th>
             <p ><q-btn flat round color="black" size="sm" icon="mdi-sigma"></q-btn></p>
           </th>
           <th v-for="name in sumForColList" :key="name">
@@ -290,6 +300,8 @@
       <blackout :menuShow="menuShow"/>
     </div>
 
+  <!-- <q-resize-observer @resize="(size) => {console.log('resize-observer = ', size)}" /> -->
+
 
 
 
@@ -304,7 +316,15 @@
 
   // import loadRowsHeaders from "../store/vxv_Table.json"
   // import loadRowsHeaders from "../store/contract.json"
-  import loadRowsHeaders from "../store/vxv_Table copy.json"
+  import loadRowsHeaders from "../store/vxv_Table.json"
+
+
+
+
+  // import { useMousePosition } from "./useMousePosition.js"
+  // import datajs from "src/store/ContractsJs/data.js"
+  // console.log("datajs = ", datajs);
+
 
 
   // import { useMousePosition } from "./useMousePosition.js"
@@ -319,13 +339,74 @@
 
   } from 'vue'
   console.log("---------------------------------------------------------")
-  const colorTabSelectRow = ref("blue-grey-2")
 
-  onUpdated(() => {console.log('onUpdated_Table')})
-
+  // Загружаем данные
   const {loadRows, loadHeaders} = loadRowsHeaders
 
-  loadHeaders.forEach((e, i) => {
+  let zeroHeaders = []
+  // Проверяем есть ли дочерние колонки
+  const mergColsBool = computed(() => loadHeaders.some( e => Object.keys(e).includes('columns')))
+  const countRowsHeder = ref([1])
+
+  // Наполняем свойствами zeroHeaders
+  if(mergColsBool) {
+    countRowsHeder.value = [1, 2]
+    loadHeaders.forEach((e, i) => {
+      if(e.columns) {
+        e.columns.forEach((el, i) => {
+          el['colspan'] = i === 0 ? e.columns.length : 1
+          el['mergeParentName'] = e.label
+          zeroHeaders.push(el)
+      })
+      } else {
+
+        zeroHeaders.push(e)
+      }
+    })
+  }
+
+  // function showCelsHed(col, rowH) {
+  //   if(countRowsHeder.value.length == 2) {
+  //     console.log(rowH, col.mergeParentName, col.colspan)
+  //     if(rowH === 1 && col.mergeParentName && col.colspan === 1) {
+  //       return {'display': 'none'}
+  //     }
+  //     if(rowH === 2 && !col.mergeParentName) {
+  //       return {'display': 'none'}
+  //     }
+  //   }
+  // }
+
+
+  function vifCelsHed(col, rowH) {
+    console.log('rowH =', rowH, 'col = ', col)
+    if(countRowsHeder.value.length == 2) {
+      if(rowH === 1 && col.colspan !== 1) {
+        return true
+      }
+      if(rowH === 2 && col.mergeParentName) {
+        return true
+        // return false
+      }
+    }
+  }
+
+  // function vifCelsHed(col, rowH) {
+  //   if(rowH === 1) {return col.colspan !== 1 ? true : false}
+  //   else {return col.mergeParentName ? true : false}
+  //   // if(rowH === 2) {return col.name !== 1 ? true : false}
+  //   console.log(col.mergeParentName)
+  // }
+
+  function iconShowHeds(col, rowH) {
+    if(countRowsHeder.value.length == 2) {
+      // if((rowH === 2 || rowH === 1 && !col.mergeParentName)) {
+      //   return true } else {return false}
+      return rowH === 2 || rowH === 1 && !col.mergeParentName ? true : false
+    } else {return true}
+  }
+
+  zeroHeaders.forEach((e, i) => {
     e["field"] = e.name
     e['visibleCol'] = e.name
     e['sortable'] = true
@@ -335,15 +416,21 @@
     e['label'].includes('%') ? e['sort'] = (a, b) => parseInt(a, 10) - parseInt(b, 10) : null
   })
 
-  const visibleColumns = ref(loadHeaders.map(e => e['visibleCol']))
+  // zeroHeaders.push({
+  //   "name": "idRow",
+  //   "align": "center",
+  //   "label": "ID"
+  // })
+
+  const visibleColumns = ref(zeroHeaders.map(e => e['visibleCol']))
   visibleColumns.value.splice(visibleColumns.value.findIndex(e => e === 'idRow'), 1)
 
 
-  loadHeaders.forEach((e, i) => e['idCol'] = i)
+  zeroHeaders.forEach((e, i) => e['idCol'] = i)
   loadRows.forEach((e, i) => e['idRow'] = i)
 
   const rows = ref(loadRows)
-  const headers = ref(loadHeaders)
+  const headers = ref(zeroHeaders)
 
   const columnKeys = reactive(headers.value.map(e => e.name))
   const columnLabels = reactive(headers.value.map(e => e.label))
@@ -561,15 +648,21 @@ const collFix = (column, idx=4) => {
   }
 }
 
-
-// const rowColorSelected = (row, col) => {
-//   if (selected.value.includes(row.idRow)) {
-//     if (col.fixed === true) {return {'color': 'black', 'box-shadow': 'none', 'background-color': '#cfd8dc'}}
-//     else {return {'background-color': '#cfd8dc'}}
-//   }
-// }
-
+// После рендера страницы корректируем fistTdWidth
 watchPostEffect(() => {
+  fistTdWidth.value = fistTd.value[0].clientWidth
+  console.log('fistTd-watchPostEffect = ', fistTd.value);
+})
+
+// При обновлении таблицы корректируем fistTdWidth
+onUpdated(() => {console.log('onUpdated_Table')
+  fistTdWidth.value = fistTd.value[0].clientWidth
+  console.log('fistTd-onUpdated = ', fistTd.value);
+
+})
+
+// Следим за изменением размера экрана и обновляем fistTdWidth
+window.addEventListener("resize", (e) => {
   fistTdWidth.value = fistTd.value.clientWidth
 })
 
@@ -579,12 +672,15 @@ const IndentsTD = (side) => {
   let keys = []
   const columnKeysList = side === 'right' ? columnKeysReverse : columnKeys
   if(fixRef.value !== null) {columnKeysList.forEach(x =>{
-    fixRef.value?.forEach(e => {
+    fixRef.value ?.forEach(e => {
       if(x === e.id) {
         widths.push(e.clientWidth)
-        keys.push(e.id)
+        // keys.push(e.id)
+        keys.includes(e.id) ? null : keys.push(e.id)
       }})
   })}
+  console.log('keys = ', keys);
+
   // Определяем отступы от границ
   let sumitem = 0
   keys?.forEach((e, i) => {
@@ -611,6 +707,7 @@ watch(() => lockOutline.value, (bool) => {
     headers.value.forEach(e => e.fixed = false)
   }
 })
+
 
 // ------------------------------------------------------------------------------------------------
 // Пагинация
@@ -737,6 +834,7 @@ $max-width: 600px
 $border: 1px solid $blue-grey-1
 $outline: 0.5px solid white
 
+
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button
   -webkit-appearance: none
@@ -779,6 +877,7 @@ input[type='number']
   background-color: $blue-grey
   outline: $border
   color: white
+  // color: red
   input
     background-color: inherit
     border: none
@@ -787,37 +886,26 @@ input[type='number']
     font-size: 12px
     // text-align: center
     display: inline-block
-    color: white
+    color: inherit
     width: 100%
+    opacity: 1
   input:focus, input:focus + .q-icon
     outline: $outline
-    background-color: $color
     background-color: white
     color: black
   .q-icon
-    color: white
+    color: inherit
     opacity: 0.8
 .search:hover
   background-color: $color
   color: black
-
-.q-page-container
-  // position: fixed
-  // right: 0
-  // left: 0
-  // bottom: 0
-  // top: 0
-  // // height: 100%
-  // height: 0px
-  // height: 660px
-
 
 .contener
   margin: 5px
   background-color: white
   height: inherit
   // height: 100%
-  // height: 60px
+  height: 300px
   outline: $outline
   transition-property: display opacity height
   transition-duration: 0.3s
@@ -858,23 +946,25 @@ input[type='number']
         vertical-align: middle
         margin: auto
       thead
-        tr
-          box-shadow: 0px 5px 10px $box-shadow
-          position: sticky
-          top: 0
-          z-index: 7
-          height: 35px
-          outline: $outline
-
+        background-color: $color
+        box-shadow: 0px 5px 10px $box-shadow
+        position: sticky
+        top: 0
+        z-index: 5
+        height: 35px
         th
           background-color: $color
+
           padding: 5px
           user-select: none
           outline: $outline
-        .boxTd
+
+        .thHeaderBox
           display: flex
           vertical-align: middle
           text-align: center
+          z-index: 5
+
       tbody
         td
           height: inherit
@@ -887,16 +977,16 @@ input[type='number']
         td:nth-child(3)
           text-align: left
       tfoot
+        position: sticky
+        left: 0
+        right: 0
+        top: 0
+        bottom: 0
+        z-index: 4
+
         tr
           background-color: $blue-grey-3
           align-items: center
-          z-index: 4
-          position: sticky
-          left: 0
-          right: 0
-          top: 0
-          bottom: 0
-          // bottom: 50px
           outline: $outline
           th
             margin: 0
@@ -907,11 +997,12 @@ input[type='number']
             transition-duration: 0.5s
         .tfootBotton
           box-shadow: 0px -5px 10px $box-shadow
-          bottom: 0
           background-color: $blue-grey
           min-height: 25px
           height: 25px
           outline: $outline
+          z-index: 5
+
 
 
 
@@ -934,6 +1025,28 @@ input[type='number']
     transform: translate3d(-4px, 0, 0)
   40%, 60%
     transform: translate3d(4px, 0, 0)
+
+
+
+.testTab
+  margin: 100px
+  outline: 0.5px solid white
+  height: inherit
+  outline: 1px solid $blue-grey-1
+  border-collapse: collapse
+  background-color: #ccc
+  table
+    tr
+      outline: 1px solid red
+
+    th
+      outline: 1px solid $blue-grey-1
+    td
+      outline: 1px solid red
+
+
+
+
 
 
 
