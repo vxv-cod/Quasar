@@ -85,11 +85,11 @@ const props = defineProps({
     },
     columnLabels: {
       type: Array,
-      default: (_list) => []
+      default: () => []
     },
     visibleColumns: {
       type: Array,
-      default: (_list) => []
+      default: () => []
     },
 
 });
@@ -143,9 +143,11 @@ function myUpdateModelValue(bool){
     if(selected.value.length === 0) { selected.value = items.value.slice() }
     // Если при хакритии selected изменился после открытия фильтра,
     // т.е. его длина другая, то отправляем из фильтра родителю изменения
-    if(fistSLengthSelected.value !== this.selected.length) {
-        emit('update:visibleColumns', selected.value)
-      }
+    // if(fistSLengthSelected.value !== this.selected.length) {
+    //     emit('update:visibleColumns', selected.value)
+    //   }
+    emit('update:visibleColumns', selected.value)
+
   } else {fistSLengthSelected.value = this.selected.length}
 
 

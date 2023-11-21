@@ -7,22 +7,27 @@
   lg (large),
   xl (extra large)
   -->
-  <br><br>fistTdWidth {{ fistTdWidth }}
+  <!-- <br><br>fistTdWidth {{ fistTdWidth }} -->
+  <!-- <br><br><pre>zeroHeaders {{ zeroHeaders }}</pre> -->
+  <!-- <br><br>multiSelectRows {{ multiSelectRows }} -->
+  <!-- <br><br>selected {{ selected }} -->
+  <br><br>visibleColumns {{ visibleColumns }}
+  <br><br>computedColsParents {{ computedColsParents }}
+  <!-- <br><br><pre>headers {{ headers }}</pre> -->
 
-<!-- <br><br>rows {{ rows }} -->
+  <!-- <br><br>rows {{ rows }} -->
 <!-- <br><br>loadRows {{ loadRows }} -->
 <!-- <br><br>selectAllFil {{ selectAllFil }} -->
 <!-- <pre>headers {{ headers }}</pre> -->
 <!-- <br><br>columns {{ columns }} -->
 <!-- <br><br>sumForColList {{ sumForColList }} -->
-<!-- <br><br>headers {{ headers }} -->
+<!-- <br><br><pre>headers {{ headers }}</pre> -->
 
-<!-- <br><br>visibleColumns {{ visibleColumns }} -->
 <!-- <br><br>filterColumns {{ filterColumns }}
 <br><br>defaultColumns {{ defaultColumns }}
 <br><br>columnsIndexRow {{ columnsIndexRow }}
 <br><br>columnItem {{ columnItem }} -->
-<!-- <br><br>selected {{ selected }}
+<!--
 <br><br>pagination {{ pagination }}
 <br><br>pagesNumber {{ pagesNumber }} -->
 <!-- <br>rowsPagsInd {{ rowsPagsInd }} -->
@@ -32,25 +37,37 @@
 
   <!-- todo Верхняя панель Кнопки -->
   <div class="panel top" >
-    <div class="" style="min-width: 35px; border-right: 1px solid white; ">
+    <div class="" style="min-width: 35px; border-right: 1px solid white; "
+    :style="showEditIcon ? `box-shadow: inset 0px 0px 15px #37474F` : null"
+    >
 
       <!-- Редактируем таблицу -->
-      <q-btn flat round color="white" size="sm" icon="mdi-pencil"
+      <q-btn flat round color="white" size="sm"
         @click="showEditIcon = !showEditIcon, !showEditIcon ? saveEditData() : null"
+        :icon="showEditIcon ? 'mdi-content-save-all-outline' : 'mdi-pencil'"
         :class="showEditIcon ? `text-amber` : null"
       >
-        <q-tooltip anchor="top middle" self="bottom middle">Редактировать таблицу</q-tooltip>
+        <q-tooltip v-if="!showEditIcon" anchor="top middle" self="bottom middle">Редактировать таблицу</q-tooltip>
+        <q-tooltip v-else="showEditIcon" anchor="top middle" self="bottom middle">Сохранить таблицу</q-tooltip>
       </q-btn>
 
-      <q-btn v-show="showEditIcon" @click="undo" flat round color="white" size="sm" icon="undo" />
-      <q-btn v-show="showEditIcon" @click="redo" flat round color="white" size="sm" icon="redo" />
+      <q-btn v-show="showEditIcon" @click="undo" flat round color="white" size="sm" icon="undo" :class="showEditIcon ? `text-amber` : null">
+        <q-tooltip anchor="top middle" self="bottom middle">Отменить</q-tooltip>
+      </q-btn>
+
+      <q-btn v-show="showEditIcon" @click="redo" flat round color="white" size="sm" icon="redo" :class="showEditIcon ? `text-amber` : null">
+        <q-tooltip anchor="top middle" self="bottom middle">Вернуть</q-tooltip>
+      </q-btn>
 
       <!-- Отменить ВСЕ изменения -->
+      <!-- :class="modifiedCells.every(e => Object.keys(e).length === 0) ? null : `text-amber` " -->
       <q-btn flat round color="white" size="sm" icon="mdi-arrow-u-left-top"
         v-show="showEditIcon"
         @click="cancelEdits"
-        :class="modifiedCells.every(e => Object.keys(e).length === 0) ? null : `text-amber` "
-      />
+        :class="showEditIcon ? `text-amber` : null"
+      >
+        <q-tooltip anchor="top middle" self="bottom middle">Отменить всё</q-tooltip>
+      </q-btn>
     </div>
 
     <div>
@@ -84,6 +101,14 @@
         :class="sortGeneral ? `text-amber` : null "
         >
         <q-tooltip anchor="top middle" self="bottom middle">Фильтры по колонкам</q-tooltip>
+      </q-btn>
+
+      <!-- Активация Мультивыбора -->
+      <q-btn flat round color="white" size="sm" icon="mdi-checkbox-multiple-marked-outline"
+        @click="multiSelectRows = !multiSelectRows"
+        :class="multiSelectRows ? `text-amber` : null "
+        >
+        <q-tooltip anchor="top middle" self="bottom middle">Мультивыбор строк</q-tooltip>
       </q-btn>
 
     </div>
@@ -157,41 +182,44 @@
       <thead >
         <tr v-for="rowH in countRowsHeder" :key="rowH">
           <!-- ---------------------------------------------- -->
-          <th ref="fistTd"
-            v-if="rowH === 1"
+          <th
+            :ref="rowH === 1 ? 'fistTd' : null"
+            v-show="rowH === 1 && multiSelectRows"
             :style="`position: sticky; left: 0; z-index: 7; `"
             :rowspan="2"
             >
             <q-checkbox class="text-white" size="xs" dense style="" color="black"
-              v-model="selectedAll"
               @click="toggleAll"
+              :model-value="selectedAll"
               />
           </th>
           <!-- ---------------------------------------------- -->
+          <!--
+            visibleColumns.includes(col.visibleCol) && showCelsHed(col, rowH) ? null : 'display: none; ',
+            v-show="showCelsHed(col, rowH)"
+
+           -->
           <th v-for="(col, idx) in headers" :key="col.idCol"
-            v-show="vifCelsHed(col, rowH)"
-            :id="vifCelsHed(col, rowH) ? col.name : null"
-            :ref="col.fixed ? 'fixRef' : 'notfixRef'"
+            :id="iconShowHeds(col, rowH) ? col.name : null"
+            :ref="col.fixed && iconShowHeds(col, rowH) ? 'fixRef' : 'notfixRef'"
+            :rowspan="countRowsHeder.length == 2 && rowH === 1 && col.mergeParentName && col.rowspan === true ? 1 : 2"
+            :colspan="rowH === 1 ? computedColsParents[col.mergeParentName] : 1"
             :style="[
-              visibleColumns.includes(col.visibleCol) ? null : 'display: none; ',
               iconShowHeds(col, rowH) ? collFix(col, 5) : null,
             ]"
-            :rowspan="countRowsHeder.length == 2 && rowH === 1 && col.mergeParentName && col.colspan > 1 ? 1 : 2"
-            :colspan="rowH === 1 ? col.colspan : 1"
-
+            v-show="showCelsHed(col, rowH)"
             >
             <div class="thHeaderBox " >
               <!-- Текст в ячейке -->
               <p >
-                {{ rowH }}
+                <!-- {{ col.visibleCol }} -->
                 {{
-                  rowH === 1 && col.mergeParentName && col.colspan !== 1 ?
+                  rowH === 1 && col.mergeParentName && col.rowspan === true ?
                   col.mergeParentName : col.label
                 }}
               </p>
-
+              <!-- Кнопки -->
               <div style="display: flex;">
-
                 <!-- фиксации колонок -->
                 <q-btn flat round color="white" size="sm" icon="mdi-lock-outline"
                   v-if="lockOutline && iconShowHeds(col, rowH)"
@@ -202,7 +230,6 @@
                     ]"
                   style="margin: auto;"
                 />
-
                 <!-- фильтрации колонок -->
                 <menuFilter
                   v-if="filterVariant && iconShowHeds(col, rowH)"
@@ -216,7 +243,6 @@
                   :colorBtn="Object.keys(filterColumns).includes(col.name) && col.name !=[] ? `text-amber` : null"
                   :class="filterVariant ? `tryaska` : null"
                   />
-
                 <!-- Сортировка в колонках -->
                 <q-btn flat round color="white" size="sm"
                   :icon="['mdi-sort', 'mdi-sort-ascending', 'mdi-sort-descending'][col.countSorted]"
@@ -230,9 +256,7 @@
                   style="margin: auto;"
                   >
                 </q-btn>
-
               </div>
-
             </div>
           </th>
         </tr>
@@ -245,13 +269,14 @@
           :style="[
             rowsPagsInd?.includes(row.idRow) ? null : `display: none`,
           ]"
-        >
 
+        >
         <td
+          v-if="multiSelectRows"
+
           :style="[
             `position: sticky; left: 0; z-index: 4; background-color: white`,
             selected.includes(row.idRow) ? 'background-color: #cfd8dc' : null,
-
           ]"
           >
           <q-checkbox v-model="selected" :val="row.idRow" size="xs" dense color="black" />
@@ -261,13 +286,17 @@
             v-text="row[col.name]"
             @input="(val) => tdInput(val, col.name, row.idRow, row[col.name])"
             @contextmenu="console.log('contextmenu => X =', $event.clientX, 'Y =', $event.clientY)"
-            :contenteditable="showEditIcon"
+            :contenteditable="showEditIcon && col.edit"
             :style="[
-              visibleColumns.includes(col.visibleCol) ? null : 'display: none; ',
+              visibleColumns.includes(col.name) ? null : 'display: none; ',
               modifiedCells[row.idRow][col.name] ? `color: #0091EA; ` : null,
               collFix(col),
               selected.includes(row.idRow) ? 'background-color: #cfd8dc' : null,
               selected.includes(row.idRow) && col.fixed === true ? 'color: black; box-shadow: none' : null,
+              {
+                'text-align': col.align,
+                'background-color' : showEditIcon && col.edit === false ? '#cfd8dc' : null,
+              },
 
             ]"
           >
@@ -314,9 +343,58 @@
   import visiableColumn from "./vxv_Table_visiable_column.vue"
   import blackout from "./blackout.vue"
 
-  // import loadRowsHeaders from "../store/vxv_Table.json"
-  // import loadRowsHeaders from "../store/contract.json"
-  import loadRowsHeaders from "../store/vxv_Table.json"
+
+  import loadRowsHeaders from "/public/data/vxv_Table.json"
+  // import loadRowsHeaders from "/public/data/vxv_Table copy.json"
+
+
+
+  // Загружаем тестовые данные
+  // import loadData from "../store/projects.json"
+  // const loadRowsXXX = []
+  // loadData.map(e => {
+  //   const temp = {}
+  //   temp['ID'] = e.ID
+  //   e.Contracts?.forEach(x => {
+  //     temp['SHIFR'] = x.SHIFR
+  //     temp['NAME'] = x.NAME
+  //   })
+  //   loadRowsXXX.push(temp)
+  // })
+
+  // const loadRowsHeaders = {
+  //   loadHeaders : [
+  //     {
+  //       name: "idRow",
+  //       align: "center",
+  //       label: "ID",
+  //       dataType: "number",
+  //     },
+  //     {
+  //       name: "ID",
+  //       required: true,
+  //       label: "ID",
+  //       align: "center",
+  //       dataType: "number",
+
+  //     },
+  //     {
+  //       name: "NAME",
+  //       required: true,
+  //       label: "Наименование объекта",
+  //       align: "left",
+  //       dataType: "string",
+  //     },
+  //     {
+  //       name: "SHIFR",
+  //       align: "center",
+  //       label: "Carbs (g)",
+  //       dataType: "string",
+  //     },
+  //   ],
+
+  //   loadRows : loadRowsXXX
+  // }
 
 
 
@@ -328,124 +406,130 @@
 
 
   // import { useMousePosition } from "./useMousePosition.js"
-  import { ref, reactive, computed, toRefs, watch, onMounted, watchEffect, isRef,
-    isReactive,
+  import { ref, reactive, computed, watch,
+    onMounted,
     watchPostEffect,
-    onBeforeMount,
-    readonly,
-    toRaw,
-    markRaw,
     onUpdated,
-
+    watchEffect,
+    isRef,
+    toRefs,
   } from 'vue'
   console.log("---------------------------------------------------------")
 
   // Загружаем данные
   const {loadRows, loadHeaders} = loadRowsHeaders
 
-  let zeroHeaders = []
   // Проверяем есть ли дочерние колонки
   const mergColsBool = computed(() => loadHeaders.some( e => Object.keys(e).includes('columns')))
   const countRowsHeder = ref([1])
 
-  // Наполняем свойствами zeroHeaders
+  // Наполняем свойствами колонки (zeroHeaders)
+  let zeroHeaders = [
+    {
+      "name": "idRow",
+      "align": "center",
+      "label": "idRow",
+      'edit' : false
+    },
+    {
+      "name": "countersRow",
+      "align": "center",
+      "label": "№ п/п",
+      'edit' : false
+    },
+  ]
+
+  // При условии наличия вложеннцх колонок
   if(mergColsBool) {
     countRowsHeder.value = [1, 2]
     loadHeaders.forEach((e, i) => {
       if(e.columns) {
         e.columns.forEach((el, i) => {
-          el['colspan'] = i === 0 ? e.columns.length : 1
+          el['colspan'] = i === 0 ? true : false
+          el['rowspan'] = i === 0 ? true : false
           el['mergeParentName'] = e.label
+          el['numberMergeCell'] = i + 1
           zeroHeaders.push(el)
-      })
-      } else {
-
-        zeroHeaders.push(e)
-      }
+        })
+      } else {zeroHeaders.push(e)}
     })
   }
 
-  // function showCelsHed(col, rowH) {
-  //   if(countRowsHeder.value.length == 2) {
-  //     console.log(rowH, col.mergeParentName, col.colspan)
-  //     if(rowH === 1 && col.mergeParentName && col.colspan === 1) {
-  //       return {'display': 'none'}
-  //     }
-  //     if(rowH === 2 && !col.mergeParentName) {
-  //       return {'display': 'none'}
-  //     }
-  //   }
-  // }
-
-
-  function vifCelsHed(col, rowH) {
-    console.log('rowH =', rowH, 'col = ', col)
-    if(countRowsHeder.value.length == 2) {
-      if(rowH === 1 && col.colspan !== 1) {
-        return true
-      }
-      if(rowH === 2 && col.mergeParentName) {
-        return true
-        // return false
-      }
-    }
-  }
-
-  // function vifCelsHed(col, rowH) {
-  //   if(rowH === 1) {return col.colspan !== 1 ? true : false}
-  //   else {return col.mergeParentName ? true : false}
-  //   // if(rowH === 2) {return col.name !== 1 ? true : false}
-  //   console.log(col.mergeParentName)
-  // }
-
-  function iconShowHeds(col, rowH) {
-    if(countRowsHeder.value.length == 2) {
-      // if((rowH === 2 || rowH === 1 && !col.mergeParentName)) {
-      //   return true } else {return false}
-      return rowH === 2 || rowH === 1 && !col.mergeParentName ? true : false
-    } else {return true}
-  }
-
+  // Добираем свойствами колонки (zeroHeaders)
   zeroHeaders.forEach((e, i) => {
-    e["field"] = e.name
-    e['visibleCol'] = e.name
     e['sortable'] = true
     e['descending'] = false
     e['countSorted'] = 0
     e['fixed'] = false
     e['label'].includes('%') ? e['sort'] = (a, b) => parseInt(a, 10) - parseInt(b, 10) : null
+    e['idCol'] = i,
+    e['edit'] = e.edit === false ? false : true
   })
 
-  // zeroHeaders.push({
-  //   "name": "idRow",
-  //   "align": "center",
-  //   "label": "ID"
-  // })
+  // Добираем свойствами строки
+  loadRows.forEach((e, i) => {
+    e['idRow'] = i
+    e['countersRow'] = i + 1
+  })
 
-  const visibleColumns = ref(zeroHeaders.map(e => e['visibleCol']))
-  visibleColumns.value.splice(visibleColumns.value.findIndex(e => e === 'idRow'), 1)
-
-
-  zeroHeaders.forEach((e, i) => e['idCol'] = i)
-  loadRows.forEach((e, i) => e['idRow'] = i)
-
+  // Рекативим строки и колонки
   const rows = ref(loadRows)
   const headers = ref(zeroHeaders)
-
-  const columnKeys = reactive(headers.value.map(e => e.name))
-  const columnLabels = reactive(headers.value.map(e => e.label))
+  const columnKeys = reactive(headers.value.map(e => e.name)).filter(e => e !== 'idRow')
+  const columnLabels = reactive(headers.value.map(e => e.label)).filter(e => e !== 'idRow')
   const columnKeysReverse = [...columnKeys].reverse()
 
+  // onMounted(() => {console.log('- onMounted -')})
 
-  const TrRef = ref([])
-  onMounted(() => {
-    console.log('- onMounted -')
-  //   document.addEventListener('mouseup', event => {
-  //     // console.log(event.target.textContent)
-  //   console.log(window.getSelection().toString())
-  // })
+  // ------------------------------------------------------------------------------------------------
+  // Показать/скрыть колонки
+  const visibleColumns = ref(zeroHeaders.map(e => e.name).filter(e => e !== 'idRow'))
+  // visibleColumns.value.splice(visibleColumns.value.findIndex(e => e === 'idRow'), 1)
+  // visibleColumns.value = visibleColumns.value.filter(e => e !== 'idRow')
 
+  // Объект из повторяющихся значений и их количества из списка
+  function arrayCountValues (arr) {
+    var v, freqs = {};
+    for (var i = arr.length; i--; ) {
+      v = arr[i];
+      if (freqs[v]) freqs[v] += 1;
+      else freqs[v] = 1;
+    }
+    return freqs;
+  }
+
+  // Находим родителей вложенных колонок и считаем дочек
+  const computedColsParents = computed(() => {
+    let obj = {}
+    let arr = []
+    headers.value.forEach((col, i) => {
+      if(col.mergeParentName && visibleColumns.value.includes(col.name)){
+        arr.push(col.mergeParentName)
+      }
+    })
+    obj = arrayCountValues(arr)
+    return obj
   })
+
+  // Функция отображения ячеек заголовка таблицы
+  function showCelsHed(col, rowH) {
+    let ParentNameBool = Object.keys(computedColsParents.value)?.includes(col.mergeParentName)
+    if(visibleColumns.value.includes(col.name)) {
+      if(countRowsHeder.value.length == 2) {
+        if(rowH === 1) {return !col.numberMergeCell || col.numberMergeCell === 1 ? true : false}
+        if(rowH === 2) {return col.mergeParentName ? true : false}
+      } else {return true}
+    } else {
+      return rowH === 1 && col.numberMergeCell === 1 && ParentNameBool ? true : false
+    }
+  }
+
+  // Определяем ячейки в звголовке таблицы для вставки кнопок (без учета родителей)
+  function iconShowHeds(col, rowH) {
+    if(countRowsHeder.value.length == 2) {
+      return rowH === 1 && !col.mergeParentName || rowH === 2 && col.mergeParentName ? true : false
+    } else {return true}
+  }
 
   // ------------------------------------------------------------------------------------------------
   // Редактирование таблицы
@@ -605,12 +689,22 @@
 
 // ----------------------------------------------------------------------------------------------
 // Выбор строк таблицы
-const selected = ref([])
+let selected = ref([])
+// Мультивыбор
+const multiSelectRows = ref(false)
 
 const selectedRowsChanged = (item) => {
-  if (selected.value.includes(item) == false) {selected.value.push(item)}
-  else {selected.value.splice(selected.value.indexOf(item), 1)}
+  if(multiSelectRows.value === true) {
+    if (selected.value.includes(item) == false) {selected.value.push(item)}
+    else {selected.value.splice(selected.value.indexOf(item), 1)}
+  } else {
+    selected.value = [item]
+  }
 }
+
+watch(() => multiSelectRows.value, (val) => {
+  val ? null : selected.value = []
+})
 
 function toggleAll () {
     if (selected.value.length) {selected.value = []}
@@ -628,7 +722,7 @@ const selectedAll = computed(() => {
 
 const lockOutline = ref(false)
 const fixRef = ref([])
-const notfixRef = ref([])
+// const notfixRef = ref([])
 const fistTd = ref('')
 const fistTdWidth = ref(1)
 
@@ -650,20 +744,23 @@ const collFix = (column, idx=4) => {
 
 // После рендера страницы корректируем fistTdWidth
 watchPostEffect(() => {
+  // console.log('fistTd.value = ', fistTd.value);
   fistTdWidth.value = fistTd.value[0].clientWidth
-  console.log('fistTd-watchPostEffect = ', fistTd.value);
+  console.log('watchPostEffect = ', fistTd.value[0].clientWidth);
 })
 
 // При обновлении таблицы корректируем fistTdWidth
 onUpdated(() => {console.log('onUpdated_Table')
   fistTdWidth.value = fistTd.value[0].clientWidth
-  console.log('fistTd-onUpdated = ', fistTd.value);
-
+  IndentsTD('left')
+  IndentsTD('right')
 })
 
 // Следим за изменением размера экрана и обновляем fistTdWidth
 window.addEventListener("resize", (e) => {
-  fistTdWidth.value = fistTd.value.clientWidth
+  fistTdWidth.value = fistTd.value[0].clientWidth
+  IndentsTD('left')
+  IndentsTD('right')
 })
 
 const IndentsTD = (side) => {
@@ -679,8 +776,6 @@ const IndentsTD = (side) => {
         keys.includes(e.id) ? null : keys.push(e.id)
       }})
   })}
-  console.log('keys = ', keys);
-
   // Определяем отступы от границ
   let sumitem = 0
   keys?.forEach((e, i) => {
@@ -693,7 +788,7 @@ const IndentsTD = (side) => {
   sumitem = 0
 }
 
-watch(() => fixRef, (val) =>
+watch(() => fixRef.value, (val) =>
   {
     IndentsTD('left')
     IndentsTD('right')
@@ -708,15 +803,11 @@ watch(() => lockOutline.value, (bool) => {
   }
 })
 
-
 // ------------------------------------------------------------------------------------------------
 // Пагинация
 const pagination = ref({
   page: 1,
   rowsPerPage: loadRows.length,
-
-  // sortBy: 'desc',
-  // descending: false,
 })
 
 // Метод Math.ceil() - округление вверх. Округляет аргумент до ближайшего большего целого.
@@ -733,26 +824,13 @@ const rowsPagsInd = computed(() => {
   return res[pagination.value.page - 1]
 })
 
-
-// console.log(sliceIntoChunks(rows.value, pagination.value.rowsPerPage))
-
-// watch(() => pagination.value.page, (val) => {
-//   pagesNumber.value.map(pn => {
-//     let count = 1
-//     pagination.value.rowsPerPage
-//   })
-//   rows.value.filter(e => e.idRow > pagination.rowsPerPage)
-//   })
-
-
-
-
 // ------------------------------------------------------------------------------------------------
 // Сортировка таблицы
 const sortGeneral = ref(false)
 function customSort(col) {
     console.log("Сортировка таблицы")
     const sortBy = col.name
+    const dataType = col.dataType
     const descending = col.descending
     col.countSorted += 1
     if(col.countSorted === 3) {
@@ -765,7 +843,7 @@ function customSort(col) {
         data.sort((a, b) => {
           const x = descending ? b : a
           const y = descending ? a : b
-          if (sortBy === 'name') {
+          if (dataType === 'string') {
             // string sort
             return x[ sortBy ] > y[ sortBy ] ? 1 : x[ sortBy ] < y[ sortBy ] ? -1 : 0
           }
@@ -775,7 +853,14 @@ function customSort(col) {
           }
         })
       }
-      col.descending = !col.descending
+      headers.value.forEach(e => {
+        if(e.name !== sortBy) {
+          e.countSorted = 0
+          e.descending = false
+        } else {
+          col.descending = !col.descending
+        }
+      })
       return data
     }
 }
@@ -785,11 +870,11 @@ watch(() => sortGeneral.value, (val) => {
     headers.value.map(e => {
       e.countSorted = 0
       e.descending = false
-      const idRowList = rows.value.map((e, i) => e.idRow)
-      rows.value = loadRows.filter(e => idRowList.includes(e.idRow))
     })
+    const idRowList = rows.value.map((e, i) => e.idRow)
+    rows.value = loadRows.filter(e => idRowList.includes(e.idRow))
   }
-  })
+})
 
 
 
@@ -823,6 +908,10 @@ const sumForColList = computed(() => {
   visibleColumns.value.map(name => obj[name] = sumForColFUN(colrow[name]))
   return  obj
 })
+// ------------------------------------------------------------------------------------------------
+
+
+
 // ------------------------------------------------------------------------------------------------
 </script>
 
@@ -954,11 +1043,9 @@ input[type='number']
         height: 35px
         th
           background-color: $color
-
           padding: 5px
           user-select: none
           outline: $outline
-
         .thHeaderBox
           display: flex
           vertical-align: middle
@@ -974,8 +1061,8 @@ input[type='number']
           padding: 5px 5px
           transition-property: display opacity
           transition-duration: 0.5s
-        td:nth-child(3)
-          text-align: left
+        // td:nth-child(3)
+        //   text-align: left
       tfoot
         position: sticky
         left: 0
@@ -1025,25 +1112,6 @@ input[type='number']
     transform: translate3d(-4px, 0, 0)
   40%, 60%
     transform: translate3d(4px, 0, 0)
-
-
-
-.testTab
-  margin: 100px
-  outline: 0.5px solid white
-  height: inherit
-  outline: 1px solid $blue-grey-1
-  border-collapse: collapse
-  background-color: #ccc
-  table
-    tr
-      outline: 1px solid red
-
-    th
-      outline: 1px solid $blue-grey-1
-    td
-      outline: 1px solid red
-
 
 
 

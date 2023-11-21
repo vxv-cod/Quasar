@@ -1,33 +1,31 @@
 {
   "loadHeaders": [
-
+    {
+      "name": "idRow",
+      "align": "center",
+      "label": "ID",
+      "dataType": "number"
+    },
     {
       "name": "name",
       "required": true,
       "label": "Dessert (100g serving)",
       "align": "left",
-      "dataType": "string",
-      "edit" : false
+      "dataType": "string"
     },
 
 
     {
-      "name": "calories_fat",
+      "name": "calories",
       "align": "center",
-      "label": "Calories_fat",
-      "columns": [{
-          "name": "calories",
-          "align": "center",
-          "label": "Calories",
-          "dataType": "number"
-        },
-        {
-          "name": "fat",
-          "align": "center",
-          "label": "Fat (g)",
-          "dataType": "number"
-        }
-      ]
+      "label": "Calories",
+      "dataType": "number"
+    },
+    {
+      "name": "fat",
+      "align": "center",
+      "label": "Fat (g)",
+      "dataType": "number"
     },
 
     {
@@ -38,29 +36,22 @@
     },
 
     {
-      "name": "protein_sodium_icalcium",
+      "name": "protein",
       "align": "center",
-      "label": "Protein Sodium Icalcium",
-      "columns": [
-        {
-          "name": "protein",
-          "align": "center",
-          "label": "Protein (g)",
-          "dataType": "number"
-        },
-        {
-          "name": "sodium",
-          "align": "center",
-          "label": "Sodium (mg)",
-          "dataType": "number"
-        },
-        {
-          "name": "calcium",
-          "align": "center",
-          "label": "Calcium (%)",
-          "dataType": "number"
-        }
-      ]
+      "label": "Protein (g)",
+      "dataType": "number"
+    },
+    {
+      "name": "sodium",
+      "align": "center",
+      "label": "Sodium (mg)",
+      "dataType": "number"
+    },
+    {
+      "name": "calcium",
+      "align": "center",
+      "label": "Calcium (%)",
+      "dataType": "number"
     },
     {
       "name": "iron",
